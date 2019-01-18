@@ -1,0 +1,33 @@
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <EditTextPreference
+        android:capitalize="words"
+        android:defaultValue="20"
+        android:inputType="textCapWords"
+        android:key="scan_frequency_time"
+        android:maxLines="1"
+        android:selectAllOnFocus="true"
+        android:singleLine="true"
+        android:title="@string/pref_title_scan_frequency_time" />
+
+    <EditTextPreference
+        android:capitalize="words"
+        android:defaultValue="10"
+        android:inputType="textCapWords"
+        android:key="scan_frequency_distance"
+        android:maxLines="100"
+        android:selectAllOnFocus="true"
+        android:singleLine="false"
+        android:title="@string/pref_title_scan_frequency_distance" />
+
+    <EditTextPreference
+        android:capitalize="words"
+        android:defaultValue="@string/pref_default_ssids"
+        android:inputType="textCapWords"
+        android:key="target_ssids"
+        android:maxLines="100"
+        android:selectAllOnFocus="true"
+        android:singleLine="false"
+        android:title="@string/pref_title_ssids" />
+
+</PreferenceScreen>

@@ -1,0 +1,102 @@
+<resources>
+    <string name="app_name">F.R.E.D</string>
+    <string name="title_activity_main">MainActivity</string>
+    <string name="title_home">Einstellungen</string>
+    <string name="title_dashboard">Gespeicherte Netzwerke löschen</string>
+    <string name="title_activity_maps">Map</string>
+    <string name="title_activity_settings">Einstellungen</string>
+    <string name="waiting_for_scan">Warte auf Scan</string>
+    <string name="ssid_unknown">unsichtbare SSID</string>
+
+    <!-- Strings related to Settings -->
+
+    <!-- Example General settings -->
+
+    <string name="pref_title_display_name">Nickname (freiwillig)</string>
+    <string name="pref_default_display_name">John Smith</string>
+
+    <string name="pref_title_ssids">Zu vermessende Netzwerke</string>
+    <string name="pref_default_ssids"></string>
+
+    <string name="pref_title_upload_url">URL der Gegenstelle</string>
+    <string name="pref_default_upload_url">https://fredbackend.ffmsl.de</string>
+
+    <string name="pref_title_upload_only_wifi">Nur über WLAN hochladen</string>
+
+
+    <!-- Example settings for Data & Sync -->
+    <string name="pref_header_data_sync">Synchronisierung</string>
+    <string name="pref_header_import">Konfiguration laden</string>
+    <string name="pref_title_sync_frequency">Synchronisationsintervall</string>
+    <string-array name="pref_sync_frequency_titles">
+        <item>15 Minuten</item>
+        <item>30 Minuten</item>
+        <item>1 Minuten</item>
+        <item>3 Minuten</item>
+        <item>6 Minuten</item>
+
+    </string-array>
+    <string-array name="pref_sync_frequency_values">
+        <item>15</item>
+        <item>30</item>
+        <item>60</item>
+        <item>180</item>
+        <item>360</item>
+
+    </string-array>
+
+
+    <string name="pref_title_scan_frequency_time">Messintervall Zeit (Sekunden)</string>
+    <string-array name="pref_scan_frequency_time_titles">
+        <item>20 Sekungen</item>
+        <item>30 Sekunden</item>
+        <item>1 Minute</item>
+        <item>5 Minuten</item>
+
+    </string-array>
+    <string-array name="pref_scan_frequency_time_values">
+        <item>20</item>
+        <item>30</item>
+        <item>60</item>
+        <item>300</item>
+    </string-array>
+
+    <string name="pref_title_scan_frequency_distance">Distanz (Meter)</string>
+    <string-array name="pref_scan_frequency_distance_titles">
+        <item>5 Meter</item>
+        <item>10 Meter</item>
+        <item>20 Meter</item>
+        <item>30 Meter</item>
+
+    </string-array>
+    <string-array name="pref_scan_frequency_distance_values">
+        <item>5</item>
+        <item>10</item>
+        <item>20</item>
+        <item>30</item>
+    </string-array>
+
+    <string-array name="list_preference_entries">
+        <item>Entry 1</item>
+        <item>Entry 2</item>
+        <item>Entry 3</item>
+    </string-array>
+
+    <string-array name="list_preference_entry_values">
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+
+    <!-- Example settings for Notifications -->
+    <string name="pref_header_notifications">Netzwerkscan</string>
+
+    <string name="auto_upload">Automatisch hochladen</string>
+
+    <string name="record_on">Aufzeichnung an</string>
+    <string name="record_off">Aufzeichnung aus</string>
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_network_list">NetworkListActivity</string>
+
+
+</resources>
