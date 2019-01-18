@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="de.florian_adelt.fred">
+    package="de.florian_adelt.fred"
+    android:permission="android.permission.RECEIVE_BOOT_COMPLETED">
 
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
@@ -9,6 +10,7 @@
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
         android:allowBackup="true"
@@ -41,6 +43,10 @@
             android:name=".service.SynchronisationService"
             android:label="Synchronization Service"
             android:permission="android.permission.BIND_JOB_SERVICE" />
+        <service
+            android:name=".service.BootJob"
+            android:label="Boot Service"
+            android:permission="android.permission.BIND_JOB_SERVICE" />
 
         <receiver android:name=".service.BootReceiver">
             <intent-filter>
@@ -57,6 +63,10 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="de.florian_adelt.fred.MapActivity" />
         </activity>
+        <activity android:name=".settings.SettingsActivity" />
+        <activity android:name=".settings.NetworkSettingsActivity" />
+        <activity android:name=".settings.SynchronizationSettingsActivity" />
+        <activity android:name=".settings.LoadSettingsActivity" />
     </application>
 
 </manifest>

@@ -42,12 +42,14 @@ import org.osmdroid.views.MapController;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import de.florian_adelt.fred.database.DatabaseHelper;
 import de.florian_adelt.fred.helper.FredHelper;
 import de.florian_adelt.fred.helper.NetworkListActivity;
 import de.florian_adelt.fred.service.LocationService;
+import de.florian_adelt.fred.settings.SettingsActivity;
 import de.florian_adelt.fred.wifi.ScanResult;
 import de.florian_adelt.fred.wifi.Scanner;
 import de.florian_adelt.fred.wifi.Wifi;
@@ -138,12 +140,25 @@ public class MapActivity extends AppCompatActivity {
 
         currentWifis = findViewById(R.id.current_wifis);
 
-        serviceToggled();
         ToggleButton toggleButton = findViewById(R.id.toggleButton);
+
+        if (preferences.contains("service_enabled")) {
+            toggleButton.setChecked(preferences.getBoolean("service_enabled", true));
+        }
+
+        serviceToggled();
+
         toggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 serviceToggled();
+            }
+        });
+
+        currentWifis.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                startActivity(new Intent(getApplicationContext(), NetworkListActivity.class));
             }
         });
 
@@ -175,8 +190,13 @@ public class MapActivity extends AppCompatActivity {
     }
 
     public void serviceToggled() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         ToggleButton toggleButton = findViewById(R.id.toggleButton);
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences.Editor editor = preferences.edit();
+
+        editor.putBoolean("service_enabled", toggleButton.isChecked());
+        editor.apply();
 
         stopService(new Intent(this, LocationService.class));
 
@@ -184,6 +204,7 @@ public class MapActivity extends AppCompatActivity {
             Log.e("fred service", "start service");
             startService(new Intent(this, LocationService.class));
         }
+
     }
 
 
@@ -199,31 +220,44 @@ public class MapActivity extends AppCompatActivity {
                 ScanResult scanResult = gson.fromJson(intent.getStringExtra("de.florian_adelt.fred.update.scan"), ScanResult.class);
 
                 List<Wifi> wifis = scanResult.getSortedWifiList();
-                int max = 8;
+
+                if (wifis.size() == 0) {
+                    currentWifis.setText(getResources().getString(R.string.last_scan_resulted_empty));
+                    return;
+                }
+
+                int max = 3;
                 int last = wifis.size() > max ? max : wifis.size();
+
+                List<Wifi> targetWifis = new ArrayList<>();
+                List<Wifi> otherWifis = new ArrayList<>();
 
                 FredHelper helper = new FredHelper(context);
 
                 StringBuilder builder = new StringBuilder();
+
                 for (int i=0; i<last; i++) {
-                    String ssid = wifis.get(i).getSsid();
-                    if ("".equals(ssid))
-                        ssid = getResources().getString(R.string.ssid_unknown);
-                    if (helper.isTargetSsid(ssid)) {
-                        builder.append("<strong>");
-                        builder.append(ssid);
-                        builder.append("</strong>");
-                    }
-                    else {
-                        builder.append(ssid);
-                    }
-                    builder.append(" (");
-                    builder.append(wifis.get(i).getLevel());
-                    builder.append("db)");
-                    if (i != last - 1)
-                        builder.append(",<br/>");
+                    if (helper.isTargetSsid(wifis.get(i).getSsid()))
+                        targetWifis.add(wifis.get(i));
+                    else
+                        otherWifis.add(wifis.get(i));
                 }
 
+                for (int i=0; i<targetWifis.size() && i<max; i++) {
+                    builder.append(wifiText(targetWifis.get(i), helper));
+                    if (i != max - 1)
+                        builder.append(", ");
+                }
+                max = max - targetWifis.size();
+                for (int i=0; i<otherWifis.size() && i<max; i++) {
+                    builder.append(wifiText(otherWifis.get(i), helper));
+                    if (i != max - 1)
+                        builder.append(", ");
+                }
+
+                if (wifis.size() > 3) {
+                    builder.append(getResources().getString(R.string.and_x_other, wifis.size() - 3));
+                }
                 currentWifis.setText(Html.fromHtml(builder.toString()));
 
             }
@@ -232,6 +266,24 @@ public class MapActivity extends AppCompatActivity {
 
     }
 
+    protected String wifiText(Wifi wifi, FredHelper helper) {
+        StringBuilder builder = new StringBuilder();
+        String ssid = wifi.getSsid();
+        if ("".equals(ssid))
+            ssid = getResources().getString(R.string.ssid_unknown);
+        if (helper.isTargetSsid(ssid)) {
+            builder.append("<strong>");
+            builder.append(ssid);
+            builder.append("</strong>");
+        }
+        else {
+            builder.append(ssid);
+        }
+        builder.append(" (");
+        builder.append(wifi.getLevel());
+        builder.append("db)");
+        return builder.toString();
+    }
 
 
 
