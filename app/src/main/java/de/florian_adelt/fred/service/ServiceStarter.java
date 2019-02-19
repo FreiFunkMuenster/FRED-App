@@ -38,9 +38,11 @@ public class ServiceStarter {
         if (preferences.getBoolean("auto_upload", true)) {  // aggressive
             Log.e("fred service", "start upload service");
             //context.startService(new Intent(context, LocationService.class));  // seems to crash
-            ComponentName serviceComponent = new ComponentName(context, SynchronisationService.class);
+            ComponentName serviceComponent = new ComponentName(context, SynchronizationService.class);
             JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
-            long wait = preferences.getInt("sync_frequency", 180) * 60 * 1000;
+            long wait = Integer.parseInt(preferences.getString("sync_frequency", "180")) * 60 * 1000;
+            Log.e("Fred Sync", "Service start after min " + wait);
+            //wait = 10000;  // for testing
             builder.setMinimumLatency(wait); // wait at least
             builder.setOverrideDeadline(wait * 2); // maximum delay
             if (preferences.getBoolean("upload_only_wifi", true))  // aggressive

@@ -99,7 +99,7 @@ public class LocationService extends Service {
             try {
                 locationManager.removeUpdates(locationListener);
             } catch (Exception ex) {
-                Log.i(TAG, "fail to remove location listners, ignore", ex);
+                Log.i(TAG, "fail to remove location listeners. This should be ignorable as everything else should keep working afterwards", ex);
             }
         }
         wifiScanner.dispose();

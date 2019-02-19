@@ -18,7 +18,7 @@
     <string name="pref_default_display_name">John Smith</string>
 
     <string name="pref_title_ssids">Zu vermessende Netzwerke</string>
-    <string name="pref_default_ssids"></string>
+    <string name="pref_default_ssids">["Funkloch", "ADELT00"]</string><!-- testing -->
 
     <string name="pref_title_upload_url">URL der Gegenstelle</string>
     <string name="pref_default_upload_url">https://fredbackend.ffmsl.de</string>
@@ -33,9 +33,9 @@
     <string-array name="pref_sync_frequency_titles">
         <item>15 Minuten</item>
         <item>30 Minuten</item>
-        <item>1 Minuten</item>
-        <item>3 Minuten</item>
-        <item>6 Minuten</item>
+        <item>1 Stunde</item>
+        <item>3 Stunden</item>
+        <item>6 Stunden</item>
 
     </string-array>
     <string-array name="pref_sync_frequency_values">
@@ -99,6 +99,13 @@
     <string name="record_off">Aufzeichnung aus</string>
     <string name="action_settings">Settings</string>
     <string name="title_activity_network_list">NetworkListActivity</string>
+    <string name="sync_networks_to_scan_now">Netzwerkliste wird von der Gegenstelle geladen</string>
+    <string name="sync_now">Jetzt Synchronisieren</string>
+    <string name="network_scan_group">Messbedingungen</string>
+    <string name="network_group">Netzwerkbedingungen</string>
+    <string name="sync_settings">Konfiguration der Gegenstelle wird geladen</string>
+    <string name="pref_title_download_url">URL der Import-Gegenstelle</string>
+    <string name="data_import_button">data_import_button</string>
 
 
 </resources>

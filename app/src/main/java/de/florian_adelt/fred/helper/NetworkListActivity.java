@@ -11,16 +11,21 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import de.florian_adelt.fred.R;
 import de.florian_adelt.fred.database.DatabaseHelper;
+import de.florian_adelt.fred.service.SynchronizationTask;
 import de.florian_adelt.fred.wifi.Wifi;
 
 public class NetworkListActivity extends AppCompatActivity {
@@ -70,16 +75,23 @@ public class NetworkListActivity extends AppCompatActivity {
         while (cursor.moveToNext()) {
 
             try {
-                JSONArray array = new JSONArray(cursor.getString(cursor.getColumnIndex("result")));
 
+                Type type = new TypeToken<List<Wifi>>() {}.getType();
+                Gson gson = new Gson();
+                List<Wifi> currentWifis = gson.fromJson(cursor.getString(cursor.getColumnIndex("result")), type);
+                this.wifis.addAll(currentWifis);
+                if (this.wifis.size() >= 500) {
+                    break;  // only get a limited amount to save performance
+                }
+                /*
+                JSONArray array = new JSONArray(cursor.getString(cursor.getColumnIndex("result")));
                 for (int i=0; i<array.length(); i++) {
 
                     JSONObject json = array.getJSONObject(i);
 
                     Wifi wifi = new Wifi(json.getString("ssid"), json.getInt("level"));
-                    wifis.add(wifi);
-                }
-            } catch (JSONException e) {
+                }*/
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 

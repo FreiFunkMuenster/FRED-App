@@ -115,6 +115,21 @@ public abstract class SubSettingsActivity extends AppCompatActivity {
             for (String key : getPreferenceManager().getSharedPreferences().getAll().keySet()) {
                 bindPreferenceSummaryToValue(findPreference(key));
             }
+
+            Preference button = findPreference(getString(R.string.data_import_button));
+            if (button != null) {
+                button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        // todo: add import
+                        Log.e("Fred Import", "Button Press");
+                        return true;
+                    }
+                });
+            }
+
+
+
         }
 
 

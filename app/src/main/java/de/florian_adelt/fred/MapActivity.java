@@ -1,6 +1,7 @@
 package de.florian_adelt.fred;
 
 import android.Manifest;
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -8,15 +9,10 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
 import android.location.Location;
-import android.location.LocationListener;
 import android.location.LocationManager;
-import android.net.wifi.WifiManager;
 import android.preference.PreferenceManager;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Html;
@@ -31,14 +27,10 @@ import android.widget.ToggleButton;
 
 import com.google.gson.Gson;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
-import org.osmdroid.views.MapController;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
@@ -49,6 +41,8 @@ import de.florian_adelt.fred.database.DatabaseHelper;
 import de.florian_adelt.fred.helper.FredHelper;
 import de.florian_adelt.fred.helper.NetworkListActivity;
 import de.florian_adelt.fred.service.LocationService;
+import de.florian_adelt.fred.service.ServiceStarter;
+import de.florian_adelt.fred.service.SynchronizationService;
 import de.florian_adelt.fred.settings.SettingsActivity;
 import de.florian_adelt.fred.wifi.ScanResult;
 import de.florian_adelt.fred.wifi.Scanner;
@@ -162,6 +156,11 @@ public class MapActivity extends AppCompatActivity {
             }
         });
 
+        if (isMyServiceRunning(SynchronizationService.class)) {
+            stopService(new Intent(this, SynchronizationService.class));
+        }
+        ServiceStarter.startSynchronizationService(getApplicationContext());
+
 
 
         /*lm.requestLocationUpdates(
@@ -256,6 +255,7 @@ public class MapActivity extends AppCompatActivity {
                 }
 
                 if (wifis.size() > 3) {
+                    builder.append(" ");
                     builder.append(getResources().getString(R.string.and_x_other, wifis.size() - 3));
                 }
                 currentWifis.setText(Html.fromHtml(builder.toString()));
@@ -351,6 +351,17 @@ public class MapActivity extends AppCompatActivity {
         map.onPause();  //needed for compass, my location overlays, v6.0.0 and up
 
         unregisterReceiver(updateReceiver);
+    }
+
+    // from https://stackoverflow.com/questions/600207/how-to-check-if-a-service-is-running-on-android
+    private boolean isMyServiceRunning(Class<?> serviceClass) {
+        ActivityManager manager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (serviceClass.getName().equals(service.service.getClassName())) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

@@ -7,6 +7,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
@@ -14,16 +15,21 @@ import android.location.LocationManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
 import android.util.Log;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import de.florian_adelt.fred.database.DatabaseHelper;
+import de.florian_adelt.fred.service.SynchronizationTask;
 
 public class Scanner {
 
@@ -36,13 +42,13 @@ public class Scanner {
     private LocationManager locationManager;
     private Location location;
 
-
     public Scanner(WifiManager wifiManager, Context context, LocationManager locationManager) {
         this.wifiManager = wifiManager;
         this.context = context;
         this.locationManager = locationManager;
         this.scanResults = new ArrayList<>();
         this.isScanning = false;
+
 
         wifiReceiver = new BroadcastReceiver() {
             @Override
@@ -83,8 +89,16 @@ public class Scanner {
         Log.e("fred handle", "scan results");
         List<ScanResult> results = wifiManager.getScanResults();
         scanResults.clear();
+
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        Type type = new TypeToken<ArrayList<String>>() {}.getType();
+        Gson gson = new Gson();
+        List<String> networksToScan = gson.fromJson(preferences.getString("target_ssids", "[]"), type);
+
         for (ScanResult scanResult : results) {
-            scanResults.add(new Wifi(scanResult.SSID, scanResult.level));
+            if (networksToScan != null && networksToScan.contains(scanResult.SSID))
+                scanResults.add(new Wifi(scanResult.level, scanResult.SSID, scanResult.BSSID, scanResult.capabilities, scanResult.centerFreq0, scanResult.centerFreq1, scanResult.channelWidth, scanResult.frequency, scanResult.isPasspointNetwork(), scanResult.is80211mcResponder()));
         }
 
         DatabaseHelper dbHelper = new DatabaseHelper(context.getApplicationContext());
@@ -116,7 +130,6 @@ public class Scanner {
                         "success",
                         scanResults);
 
-                Gson gson = new Gson();
                 String json = gson.toJson(scanResult);
                 Intent i = new Intent("de.florian_adelt.fred.update");
                 Bundle extras = new Bundle();
@@ -144,7 +157,13 @@ public class Scanner {
 
 
     public String getScanResultJson() {
-        StringBuilder builder = new StringBuilder();
+
+        Gson gson = new Gson();
+        return gson.toJson(scanResults);
+
+
+
+        /*StringBuilder builder = new StringBuilder();
         builder.append('[');
 
         for (int i=0; i < scanResults.size(); i++) {
@@ -163,7 +182,7 @@ public class Scanner {
 
         builder.append(']');
 
-        return builder.toString();
+        return builder.toString();*/
     }
 
     public void dispose() {

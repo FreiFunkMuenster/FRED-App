@@ -1,6 +1,5 @@
 package de.florian_adelt.fred.wifi;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -14,9 +13,9 @@ public class ScanResult {
     protected double altitude;
     protected double accuracy;
     protected String status;
-    protected List<Wifi> wifis;
+    protected List<Wifi> networks;
 
-    public ScanResult(long id, long time, double latitude, double longitude, double altitude, double accuracy, String status, List<Wifi> wifis) {
+    public ScanResult(long id, long time, double latitude, double longitude, double altitude, double accuracy, String status, List<Wifi> networks) {
         this.id = id;
         this.time = time;
         this.latitude = latitude;
@@ -24,12 +23,12 @@ public class ScanResult {
         this.altitude = altitude;
         this.accuracy = accuracy;
         this.status = status;
-        this.wifis = wifis;
+        this.networks = networks;
     }
 
 
     public List<Wifi> getSortedWifiList() {
-        Collections.sort(wifis, new Comparator<Wifi>() {
+        Collections.sort(networks, new Comparator<Wifi>() {
             @Override
             public int compare(Wifi aWifi, Wifi bWifi)
             {
@@ -37,7 +36,7 @@ public class ScanResult {
             }
         });
 
-        return wifis;
+        return networks;
     }
 
     public long getId() {
@@ -96,11 +95,11 @@ public class ScanResult {
         this.status = status;
     }
 
-    public List<Wifi> getWifis() {
-        return wifis;
+    public List<Wifi> getNetworks() {
+        return networks;
     }
 
-    public void setWifis(List<Wifi> wifis) {
-        this.wifis = wifis;
+    public void setNetworks(List<Wifi> networks) {
+        this.networks = networks;
     }
 }
