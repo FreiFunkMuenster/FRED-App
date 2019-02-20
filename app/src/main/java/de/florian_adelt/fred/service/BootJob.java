@@ -7,13 +7,15 @@ import android.content.Intent;
 import android.util.Log;
 
 public class BootJob extends JobService {
-    private static final String TAG = "SyncService";
+    private static final String TAG = "Fred SyncService";
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        Log.e("fred boot", "try to start service");
+        Log.e(TAG, "try to start service");
         Intent service = new Intent(getApplicationContext(), LocationService.class);
         getApplicationContext().startService(service);
+
+        //ServiceStarter.startLocationService(getApplicationContext());
 
         return false;
     }

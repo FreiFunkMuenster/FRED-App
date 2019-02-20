@@ -26,6 +26,8 @@ public class LocationService extends Service {
     private Location location;
     private Scanner wifiScanner;
 
+    private int serviceId;
+
     private LocationManager locationManager;
     private final LocationListener locationListener = new LocationListener() {
         @Override
@@ -35,7 +37,9 @@ public class LocationService extends Service {
             Log.e("fred location change", "fred longitude: " + newLocation.getLongitude());
             Log.e("fred location change", "fred altitude: " + newLocation.getAltitude());
             Log.e("fred location change", "fred accuracy: " + newLocation.getAccuracy());
+
             wifiScanner.scan(location);
+
         }
 
         @Override
@@ -66,6 +70,7 @@ public class LocationService extends Service {
     {
         Log.e(TAG, "onStartCommand");
         super.onStartCommand(intent, flags, startId);
+        this.serviceId = startId;
         return START_STICKY;
     }
 
@@ -78,16 +83,19 @@ public class LocationService extends Service {
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
             locationManager.requestLocationUpdates(
                     LocationManager.GPS_PROVIDER,
-                    Long.parseLong(preferences.getString("scan_frequency_time", "20")) * 1000,  // todo: evaluate best value
-                    Float.parseFloat(preferences.getString("scan_frequency_distance", "10")),
+                    // we should not use android to determine if a scan is needed by frequency and distance because it will keep gps on until a scan is made.
+                    // instead we use a default min time value and set the min distance to 0. Like this, we force an almost immediate result.
+                    // also, we will then check by ourselves what the travelled distances since the last scan was and scan accordingly
+                    5000,
+                    0,
                     locationListener);
         } catch (java.lang.SecurityException ex) {
-            Log.i(TAG, "fail to request location update, ignore", ex);
+            Log.e(TAG, "fail to request location update, ignore", ex);
         } catch (IllegalArgumentException ex) {
-            Log.d(TAG, "gps provider does not exist " + ex.getMessage());
+            Log.e(TAG, "gps provider does not exist " + ex.getMessage());
         }
 
-        wifiScanner = new Scanner((WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE), this, locationManager);
+        wifiScanner = new Scanner((WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE), this);
     }
 
     @Override
@@ -99,7 +107,7 @@ public class LocationService extends Service {
             try {
                 locationManager.removeUpdates(locationListener);
             } catch (Exception ex) {
-                Log.i(TAG, "fail to remove location listeners. This should be ignorable as everything else should keep working afterwards", ex);
+                Log.e(TAG, "fail to remove location listeners. This should be ignorable as everything else should keep working afterwards", ex);
             }
         }
         wifiScanner.dispose();
@@ -112,6 +120,10 @@ public class LocationService extends Service {
         }
     }
 
+    public void killAndRestart() {
+        stopSelf(serviceId);
+        ServiceStarter.startLocationService(getApplicationContext());
+    }
 
 
 

@@ -49,6 +49,10 @@
             android:positiveButtonText="@null"
             android:title="@string/pref_title_sync_frequency" />
 
+        <Preference android:title="@string/sync_now"
+            android:key="@string/data_upload_button"
+            android:summary="@string/upload_data"/>
+
     </PreferenceCategory>
 
 </PreferenceScreen>

@@ -22,15 +22,26 @@ public class ServiceStarter {
             //context.startService(new Intent(context, LocationService.class));  // seems to crash
             ComponentName serviceComponent = new ComponentName(context, BootJob.class);
             JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
-            builder.setMinimumLatency(15000); // wait at least
-            builder.setOverrideDeadline(30000); // maximum delay
+
+            long wait = Integer.parseInt(preferences.getString("scan_frequency_time", "20")) * 1000;
+
+            builder.setMinimumLatency(wait); // wait at least
+            builder.setOverrideDeadline(wait * 2); // maximum delay
             JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
             Objects.requireNonNull(jobScheduler).schedule(builder.build());
         }
 
     }
 
+
     public static void startSynchronizationService(Context context) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        long wait = Integer.parseInt(preferences.getString("sync_frequency", "180")) * 60 * 1000;
+        boolean wifiOnly = preferences.getBoolean("upload_only_wifi", true);
+        startSynchronizationService(context, wait, wifiOnly);
+    }
+
+    public static void startSynchronizationService(Context context, long wait, boolean wifiOnly) {
         Log.e("fred service", "check upload service start");
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -39,13 +50,12 @@ public class ServiceStarter {
             Log.e("fred service", "start upload service");
             //context.startService(new Intent(context, LocationService.class));  // seems to crash
             ComponentName serviceComponent = new ComponentName(context, SynchronizationService.class);
-            JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
-            long wait = Integer.parseInt(preferences.getString("sync_frequency", "180")) * 60 * 1000;
+            JobInfo.Builder builder = new JobInfo.Builder(1, serviceComponent);
             Log.e("Fred Sync", "Service start after min " + wait);
             //wait = 10000;  // for testing
             builder.setMinimumLatency(wait); // wait at least
             builder.setOverrideDeadline(wait * 2); // maximum delay
-            if (preferences.getBoolean("upload_only_wifi", true))  // aggressive
+            if (wifiOnly)
                 builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED);
             JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
             Objects.requireNonNull(jobScheduler).schedule(builder.build());

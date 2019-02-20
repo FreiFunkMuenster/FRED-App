@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.MenuItem;
 
 import de.florian_adelt.fred.R;
+import de.florian_adelt.fred.service.ServiceStarter;
 
 public abstract class SubSettingsActivity extends AppCompatActivity {
 
@@ -116,13 +117,24 @@ public abstract class SubSettingsActivity extends AppCompatActivity {
                 bindPreferenceSummaryToValue(findPreference(key));
             }
 
-            Preference button = findPreference(getString(R.string.data_import_button));
-            if (button != null) {
-                button.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+            Preference importButton = findPreference(getString(R.string.data_import_button));
+            if (importButton != null) {
+                importButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         // todo: add import
                         Log.e("Fred Import", "Button Press");
+                        return true;
+                    }
+                });
+            }
+            Preference uploadButton = findPreference(getString(R.string.data_upload_button));
+            if (uploadButton != null) {
+                uploadButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Log.e("Fred Upload", "Button Press");
+                        ServiceStarter.startSynchronizationService(getContext(), 500, false);
                         return true;
                     }
                 });

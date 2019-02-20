@@ -12,6 +12,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationManager;
 import android.preference.PreferenceManager;
+import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -21,6 +22,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -64,6 +66,26 @@ public class MapActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        initializeApp();
+
+    }
+
+    private void initializeApp() {
+
+
+        if(!requestPermissions()) {
+            setContentView(R.layout.inactive_layout);
+            Button button = findViewById(R.id.start_app_button);
+            button.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    initializeApp();
+                }
+            });
+            return;
+        }
+
+
         //load/initialize the osmdroid configuration, this can be done
         Context ctx = getApplicationContext();
         Configuration.getInstance().load(ctx, PreferenceManager.getDefaultSharedPreferences(ctx));
@@ -76,7 +98,6 @@ public class MapActivity extends AppCompatActivity {
         //inflate and create the map
         setContentView(R.layout.activity_map);
 
-        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1);
 
         map = (MapView) findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
@@ -101,21 +122,9 @@ public class MapActivity extends AppCompatActivity {
         map.getOverlays().add(locationOverlay);
 
 
+
+
         LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            // TODO: Consider calling
-            //    ActivityCompat#requestPermissions
-            // here to request the missing permissions, and then overriding
-            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-            //                                          int[] grantResults)
-            // to handle the case where the user grants the permission. See the documentation
-            // for ActivityCompat#requestPermissions for more details.
-
-            // TODO: handle missing permission which is needed to run the app
-            Log.e("fred missing Permission", "fred permission");
-            return;
-        }
-
         Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if (location != null)
         {
@@ -129,7 +138,10 @@ public class MapActivity extends AppCompatActivity {
         }
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-
+        String targetSSIDs = preferences.getString("target_ssids", null);
+        if (targetSSIDs == null) {
+            preferences.edit().putString("target_ssids", getResources().getString(R.string.pref_default_ssids)).apply();
+        }
 
 
         currentWifis = findViewById(R.id.current_wifis);
@@ -183,9 +195,6 @@ public class MapActivity extends AppCompatActivity {
         };
         wifiScanner = new Scanner((WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE), wifiReceiver, this, lm);*/
         //wifiScanner.scan();
-
-
-
     }
 
     public void serviceToggled() {
@@ -201,7 +210,8 @@ public class MapActivity extends AppCompatActivity {
 
         if (toggleButton.isChecked()) {
             Log.e("fred service", "start service");
-            startService(new Intent(this, LocationService.class));
+            //startService(new Intent(this, LocationService.class));
+            ServiceStarter.startLocationService(this.getApplicationContext());
         }
 
     }
@@ -332,25 +342,32 @@ public class MapActivity extends AppCompatActivity {
     @Override
     public void onResume(){
         super.onResume();
+
         //this will refresh the osmdroid configuration on resuming.
         //if you make changes to the configuration, use
         //SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         //Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this));
-        map.onResume(); //needed for compass, my location overlays, v6.0.0 and up
+        if (map != null)
+            map.onResume(); //needed for compass, my location overlays, v6.0.0 and up
 
-        registerUpdateReceiver();
+        if (hasPermissions())
+            registerUpdateReceiver();
     }
 
     @Override
     public void onPause(){
         super.onPause();
+
+
         //this will refresh the osmdroid configuration on resuming.
         //if you make changes to the configuration, use
         //SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         //Configuration.getInstance().save(this, prefs);
-        map.onPause();  //needed for compass, my location overlays, v6.0.0 and up
+        if (map != null)
+            map.onPause();  //needed for compass, my location overlays, v6.0.0 and up
 
-        unregisterReceiver(updateReceiver);
+        if (hasPermissions())
+            unregisterReceiver(updateReceiver);
     }
 
     // from https://stackoverflow.com/questions/600207/how-to-check-if-a-service-is-running-on-android
@@ -364,4 +381,13 @@ public class MapActivity extends AppCompatActivity {
         return false;
     }
 
+    private boolean requestPermissions() {
+
+        requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION},1);
+        return hasPermissions();
+    }
+
+    private boolean hasPermissions() {
+        return ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
+    }
 }

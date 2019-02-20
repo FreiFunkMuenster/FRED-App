@@ -18,7 +18,7 @@
     <string name="pref_default_display_name">John Smith</string>
 
     <string name="pref_title_ssids">Zu vermessende Netzwerke</string>
-    <string name="pref_default_ssids">["Funkloch", "ADELT00"]</string><!-- testing -->
+    <string name="pref_default_ssids">[\"Funkloch\", \"ADELT00\"]</string><!-- testing -->
 
     <string name="pref_title_upload_url">URL der Gegenstelle</string>
     <string name="pref_default_upload_url">https://fredbackend.ffmsl.de</string>
@@ -106,6 +106,10 @@
     <string name="sync_settings">Konfiguration der Gegenstelle wird geladen</string>
     <string name="pref_title_download_url">URL der Import-Gegenstelle</string>
     <string name="data_import_button">data_import_button</string>
+    <string name="start_app_string">App starten</string>
+    <string name="start_app_explanation">F.R.E.D benötigt Zugriff auf Ihren Standort. Wurde die App gestartet, ohne die entsprechende Berechtigung, erscheint dieser Bildschirm. Bitte erlauben Sie der App den Zugriff auf Ihren Standort und starten Sie die App über den angezeigten Knopf. Ihre Standortdaten werden ausschließlich anonymisert gespeichert</string>
+    <string name="data_upload_button">data_upload_button</string>
+    <string name="upload_data">Gesammelte Netzwerkdaten jetzt hochladen</string>
 
 
 </resources>

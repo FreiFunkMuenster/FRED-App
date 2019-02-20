@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 import de.florian_adelt.fred.database.DatabaseHelper;
+import de.florian_adelt.fred.service.LocationService;
 import de.florian_adelt.fred.service.SynchronizationTask;
 
 public class Scanner {
@@ -39,13 +40,13 @@ public class Scanner {
     private Context context;
     private List<Wifi> scanResults;
     private boolean isScanning;
-    private LocationManager locationManager;
     private Location location;
+    private LocationService service;
 
-    public Scanner(WifiManager wifiManager, Context context, LocationManager locationManager) {
+    public Scanner(WifiManager wifiManager, LocationService service) {
         this.wifiManager = wifiManager;
-        this.context = context;
-        this.locationManager = locationManager;
+        this.context = service.getApplicationContext();
+        this.service = service;
         this.scanResults = new ArrayList<>();
         this.isScanning = false;
 
@@ -71,7 +72,23 @@ public class Scanner {
             wifiManager.setWifiEnabled(true);
         }
 
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        float lastLatitude = preferences.getFloat("last_latitude", 0);
+        float lastLongitude = preferences.getFloat("last_longitude", 0);
+
         this.location = location;
+
+        float distance = distFrom(lastLatitude, lastLongitude, (float) location.getLatitude(), (float) location.getLongitude());
+
+
+        Log.e("Fred Scanner", "Travelled Distance: " + distance);
+
+        if (distance < Float.parseFloat(preferences.getString("scan_frequency_distance", "10"))) {
+            Log.e("Fred Scanner", "Travelled Distance was not enough: " + distance + "/" + preferences.getString("scan_frequency_distance", "10"));
+            service.killAndRestart();
+            return;
+        }
+
         isScanning = true;
 
 
@@ -92,6 +109,11 @@ public class Scanner {
 
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        preferences.edit()
+                .putFloat("last_latitude", (float) location.getLatitude())
+                .putFloat("last_longitude", (float) location.getLongitude())
+                .apply();
+
         Type type = new TypeToken<ArrayList<String>>() {}.getType();
         Gson gson = new Gson();
         List<String> networksToScan = gson.fromJson(preferences.getString("target_ssids", "[]"), type);
@@ -152,6 +174,7 @@ public class Scanner {
             isScanning = false;
         }
 
+        service.killAndRestart();
 
     }
 
@@ -187,6 +210,23 @@ public class Scanner {
 
     public void dispose() {
         context.unregisterReceiver(wifiReceiver);
+    }
+
+
+
+
+    /* from: https://stackoverflow.com/questions/837872/calculate-distance-in-meters-when-you-know-longitude-and-latitude-in-java */
+    public static float distFrom(float lat1, float lng1, float lat2, float lng2) {
+        double earthRadius = 6371000; //meters
+        double dLat = Math.toRadians(lat2-lat1);
+        double dLng = Math.toRadians(lng2-lng1);
+        double a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(Math.toRadians(lat1)) * Math.cos(Math.toRadians(lat2)) *
+                        Math.sin(dLng/2) * Math.sin(dLng/2);
+        double c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        float dist = (float) (earthRadius * c);
+
+        return dist;
     }
 
 }
