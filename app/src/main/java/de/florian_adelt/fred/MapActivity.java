@@ -62,6 +62,8 @@ public class MapActivity extends AppCompatActivity {
 
     protected BroadcastReceiver updateReceiver;
 
+    protected MyLocationNewOverlay locationOverlay;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -98,20 +100,22 @@ public class MapActivity extends AppCompatActivity {
         //inflate and create the map
         setContentView(R.layout.activity_map);
 
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
+
 
         map = (MapView) findViewById(R.id.map);
         map.setTileSource(TileSourceFactory.MAPNIK);
         map.setMultiTouchControls(true);
-        map.setUseDataConnection(true);  // can be interesting later on
+        map.setUseDataConnection(true);  // todo: can be interesting later on
         map.setClickable(true);
 
 
         final IMapController mapController = map.getController();
         mapController.setZoom(20);
-        GeoPoint startPoint = new GeoPoint(48.8583, 2.2944);
+        GeoPoint startPoint = new GeoPoint(preferences.getFloat("last_latitude", 48.8583f), preferences.getFloat("last_longitude", 2.2944f));
         mapController.setCenter(startPoint);
 
-        final MyLocationNewOverlay locationOverlay = new MyLocationNewOverlay(map);
+        locationOverlay = new MyLocationNewOverlay(map);
         locationOverlay.enableMyLocation(); // not on by default
         //locationOverlay.disableFollowLocation();
         locationOverlay.setDrawAccuracyEnabled(true);
@@ -124,7 +128,7 @@ public class MapActivity extends AppCompatActivity {
 
 
 
-        LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        /*LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         if (location != null)
         {
@@ -135,9 +139,8 @@ public class MapActivity extends AppCompatActivity {
         else
         {
             Log.e("Location fred", "Location null");
-        }
+        }*/
 
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         String targetSSIDs = preferences.getString("target_ssids", null);
         if (targetSSIDs == null) {
             preferences.edit().putString("target_ssids", getResources().getString(R.string.pref_default_ssids)).apply();
@@ -168,10 +171,14 @@ public class MapActivity extends AppCompatActivity {
             }
         });
 
+        //currentWifis.setText(Html.fromHtml(getResources().getString(R.string.last_scan_result) + " " + preferences.getString("cached_last_scan_result", getResources().getString(R.string.waiting_for_scan))));
+
+
         if (isMyServiceRunning(SynchronizationService.class)) {
             stopService(new Intent(this, SynchronizationService.class));
         }
         ServiceStarter.startSynchronizationService(getApplicationContext());
+        ServiceStarter.startLocationService(getApplicationContext(), 0);  // Start first location Service immediately
 
 
 
@@ -209,9 +216,15 @@ public class MapActivity extends AppCompatActivity {
         stopService(new Intent(this, LocationService.class));
 
         if (toggleButton.isChecked()) {
+            locationOverlay.enableMyLocation();
+            locationOverlay.enableFollowLocation();
             Log.e("fred service", "start service");
             //startService(new Intent(this, LocationService.class));
             ServiceStarter.startLocationService(this.getApplicationContext());
+        }
+        else {
+            locationOverlay.disableFollowLocation();
+            locationOverlay.disableMyLocation();
         }
 
     }
@@ -268,7 +281,12 @@ public class MapActivity extends AppCompatActivity {
                     builder.append(" ");
                     builder.append(getResources().getString(R.string.and_x_other, wifis.size() - 3));
                 }
-                currentWifis.setText(Html.fromHtml(builder.toString()));
+                String result = builder.toString();
+                currentWifis.setText(Html.fromHtml(result));
+                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+                preferences.edit()
+                        .putString("cached_last_scan_result", result)
+                        .apply();
 
             }
         };

@@ -110,6 +110,8 @@
     <string name="start_app_explanation">F.R.E.D benötigt Zugriff auf Ihren Standort. Wurde die App gestartet, ohne die entsprechende Berechtigung, erscheint dieser Bildschirm. Bitte erlauben Sie der App den Zugriff auf Ihren Standort und starten Sie die App über den angezeigten Knopf. Ihre Standortdaten werden ausschließlich anonymisert gespeichert</string>
     <string name="data_upload_button">data_upload_button</string>
     <string name="upload_data">Gesammelte Netzwerkdaten jetzt hochladen</string>
+    <string name="last_scan_result">Letzte Netzwerke: </string>
+    <string name="scan_found_x">Erkannte Netzwerke: </string>
 
 
 </resources>

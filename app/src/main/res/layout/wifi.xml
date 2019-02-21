@@ -10,7 +10,7 @@
     android:paddingRight="@dimen/activity_horizontal_margin">
 
     <TextView
-        android:id="@+id/ssid"
+        android:id="@+id/network_view_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentTop="true"
@@ -18,9 +18,9 @@
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/level"
+        android:id="@+id/network_view_level"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@id/ssid" />
+        android:layout_below="@id/network_view_title" />
 
 </RelativeLayout>

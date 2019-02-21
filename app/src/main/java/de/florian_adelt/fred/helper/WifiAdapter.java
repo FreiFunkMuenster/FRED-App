@@ -15,9 +15,9 @@ import de.florian_adelt.fred.wifi.Wifi;
 public class WifiAdapter extends RecyclerView.Adapter<WifiAdapter.MyViewHolder> {
 
 
-    protected List<Wifi> list;
+    protected List<SimpleListable> list;
 
-    public WifiAdapter(List<Wifi> list) {
+    public WifiAdapter(List<SimpleListable> list) {
         this.list = list;
     }
 
@@ -32,9 +32,15 @@ public class WifiAdapter extends RecyclerView.Adapter<WifiAdapter.MyViewHolder> 
 
     @Override
     public void onBindViewHolder(@NonNull MyViewHolder holder, int i) {
-        Wifi wifi = list.get(i);
-        holder.ssid.setText(wifi.getSsid());
-        holder.level.setText("Level: " + wifi.getLevel());
+        SimpleListable item = list.get(i);
+        holder.title.setText(item.getTitle());
+        if (item.getTitleColor() != 0) {
+            holder.title.setTextColor(item.getTitleColor());
+        }
+        else {
+            holder.title.setTextColor(holder.subtitle.getCurrentTextColor());  // use default text color
+        }
+        holder.subtitle.setText(item.getSubtitle());
     }
 
     @Override
@@ -43,13 +49,13 @@ public class WifiAdapter extends RecyclerView.Adapter<WifiAdapter.MyViewHolder> 
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder {
-        public TextView ssid, level;
+        public TextView title, subtitle;
 
         public MyViewHolder(View view) {
             super(view);
 
-            ssid = (TextView) view.findViewById(R.id.ssid);
-            level = (TextView) view.findViewById(R.id.level);
+            title = (TextView) view.findViewById(R.id.network_view_title);
+            subtitle = (TextView) view.findViewById(R.id.network_view_level);
         }
     }
 

@@ -5,10 +5,13 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 
 import com.google.gson.Gson;
@@ -19,9 +22,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.reflect.Type;
+import java.sql.Date;
+import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
+import java.util.TimeZone;
 
 import de.florian_adelt.fred.R;
 import de.florian_adelt.fred.database.DatabaseHelper;
@@ -31,7 +39,7 @@ import de.florian_adelt.fred.wifi.Wifi;
 public class NetworkListActivity extends AppCompatActivity {
 
 
-    private List<Wifi> wifis;
+    private List<SimpleListable> wifis;
     private RecyclerView list;
     private RecyclerView.Adapter adapter;
     private RecyclerView.LayoutManager listManager;
@@ -78,7 +86,30 @@ public class NetworkListActivity extends AppCompatActivity {
 
                 Type type = new TypeToken<List<Wifi>>() {}.getType();
                 Gson gson = new Gson();
-                List<Wifi> currentWifis = gson.fromJson(cursor.getString(cursor.getColumnIndex("result")), type);
+                final List<Wifi> currentWifis = gson.fromJson(cursor.getString(cursor.getColumnIndex("result")), type);
+
+                Timestamp stamp = new Timestamp(System.currentTimeMillis());
+                Date date = new Date(stamp.getTime());
+                SimpleDateFormat sdf = new SimpleDateFormat("H:mm", Locale.GERMAN);
+                sdf.setTimeZone(TimeZone.getDefault());
+                final String formattedDate = sdf.format(date) + " Uhr";
+
+                this.wifis.add(new SimpleListable() {
+                    @Override
+                    public String getTitle() {
+                        return getResources().getString(R.string.scan_found_x) + " " + currentWifis.size();
+                    }
+
+                    @Override
+                    public String getSubtitle() {
+                        return formattedDate;
+                    }
+
+                    @Override
+                    public int getTitleColor() {
+                        return getResources().getColor(R.color.colorPrimary, getTheme());
+                    }
+                });
                 this.wifis.addAll(currentWifis);
                 if (this.wifis.size() >= 500) {
                     break;  // only get a limited amount to save performance
@@ -101,6 +132,18 @@ public class NetworkListActivity extends AppCompatActivity {
         db.close();
 
         adapter.notifyDataSetChanged();
+    }
+
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if (id == android.R.id.home) {
+            onBackPressed();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
 }

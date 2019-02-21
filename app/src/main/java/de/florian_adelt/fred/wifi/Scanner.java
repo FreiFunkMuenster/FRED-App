@@ -67,6 +67,10 @@ public class Scanner {
             Log.e("fred scanner", "scanning already in progress");
             return;
         }
+        if (location == null) {
+            Log.e("fred scanner", "Tried to scan with null location");
+            return;
+        }
 
         if (!wifiManager.isWifiEnabled()) {
             wifiManager.setWifiEnabled(true);
@@ -77,6 +81,7 @@ public class Scanner {
         float lastLongitude = preferences.getFloat("last_longitude", 0);
 
         this.location = location;
+
 
         float distance = distFrom(lastLatitude, lastLongitude, (float) location.getLatitude(), (float) location.getLongitude());
 
@@ -93,6 +98,7 @@ public class Scanner {
 
 
         if (wifiManager.startScan()) {
+            service.removeUpdates();
             return ;
         }
 
@@ -103,6 +109,10 @@ public class Scanner {
     }
 
     public void handleScanResult(Context context, Intent intent) {
+        if (this.location == null) {
+            Log.e("fred scanner", "Tried to scan with null location");
+            return;
+        }
         Log.e("fred handle", "scan results");
         List<ScanResult> results = wifiManager.getScanResults();
         scanResults.clear();

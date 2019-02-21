@@ -1,6 +1,8 @@
 package de.florian_adelt.fred.wifi;
 
-public class Wifi {
+import de.florian_adelt.fred.helper.SimpleListable;
+
+public class Wifi implements SimpleListable {
 
     protected int level;
     protected String ssid;
@@ -85,5 +87,20 @@ public class Wifi {
 
     public String getBss_load_element() {
         return bss_load_element;
+    }
+
+    @Override
+    public String getTitle() {
+        return ssid;
+    }
+
+    @Override
+    public String getSubtitle() {
+        return "Level: " + level;
+    }
+
+    @Override
+    public int getTitleColor() {
+        return 0;
     }
 }

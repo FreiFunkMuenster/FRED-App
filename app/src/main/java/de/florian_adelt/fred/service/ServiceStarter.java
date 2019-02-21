@@ -14,6 +14,12 @@ public class ServiceStarter {
 
 
     public static void startLocationService(Context context) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        long wait = Integer.parseInt(preferences.getString("scan_frequency_time", "20")) * 1000;
+        startLocationService(context, wait);
+    }
+
+    public static void startLocationService(Context context, long wait) {
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
 
@@ -23,10 +29,10 @@ public class ServiceStarter {
             ComponentName serviceComponent = new ComponentName(context, BootJob.class);
             JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
 
-            long wait = Integer.parseInt(preferences.getString("scan_frequency_time", "20")) * 1000;
+            //long wait = Integer.parseInt(preferences.getString("scan_frequency_time", "20")) * 1000;
 
             builder.setMinimumLatency(wait); // wait at least
-            builder.setOverrideDeadline(wait * 2); // maximum delay
+            builder.setOverrideDeadline(wait); // maximum delay
             JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
             Objects.requireNonNull(jobScheduler).schedule(builder.build());
         }
@@ -54,7 +60,7 @@ public class ServiceStarter {
             Log.e("Fred Sync", "Service start after min " + wait);
             //wait = 10000;  // for testing
             builder.setMinimumLatency(wait); // wait at least
-            builder.setOverrideDeadline(wait * 2); // maximum delay
+            builder.setOverrideDeadline(wait); // maximum delay
             if (wifiOnly)
                 builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED);
             JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);

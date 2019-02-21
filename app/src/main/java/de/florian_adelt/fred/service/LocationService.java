@@ -126,5 +126,7 @@ public class LocationService extends Service {
     }
 
 
-
+    public void removeUpdates() {
+        locationManager.removeUpdates(locationListener);
+    }
 }
