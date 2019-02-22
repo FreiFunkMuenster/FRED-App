@@ -16,6 +16,7 @@ public class WifiAdapter extends RecyclerView.Adapter<WifiAdapter.MyViewHolder> 
 
 
     protected List<SimpleListable> list;
+    protected View.OnClickListener itemClickListener;
 
     public WifiAdapter(List<SimpleListable> list) {
         this.list = list;
@@ -24,10 +25,15 @@ public class WifiAdapter extends RecyclerView.Adapter<WifiAdapter.MyViewHolder> 
     @NonNull
     @Override
     public MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int i) {
+
+        return new MyViewHolder(getViewFor(parent, i));
+    }
+
+    public View getViewFor(ViewGroup parent, int i) {
+
         View itemView = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.wifi, parent, false);
-
-        return new MyViewHolder(itemView);
+        return itemView;
     }
 
     @Override
@@ -41,6 +47,14 @@ public class WifiAdapter extends RecyclerView.Adapter<WifiAdapter.MyViewHolder> 
             holder.title.setTextColor(holder.subtitle.getCurrentTextColor());  // use default text color
         }
         holder.subtitle.setText(item.getSubtitle());
+    }
+
+    public View.OnClickListener getItemClickListener() {
+        return itemClickListener;
+    }
+
+    public void setItemClickListener(View.OnClickListener itemClickListener) {
+        this.itemClickListener = itemClickListener;
     }
 
     @Override

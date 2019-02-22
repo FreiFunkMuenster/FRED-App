@@ -112,6 +112,12 @@
     <string name="upload_data">Gesammelte Netzwerkdaten jetzt hochladen</string>
     <string name="last_scan_result">Letzte Netzwerke: </string>
     <string name="scan_found_x">Erkannte Netzwerke: </string>
+    <string name="add_ssid_dialog_title">SSID hinzufügen</string>
+    <string name="add">Hinzufügen</string>
+    <string name="cancel">Abbrechen</string>
+    <string name="remove_ssid_dialog_title">SSID entfernen?</string>
+    <string name="remove">Entfernen</string>
+    <string name="gps_disabled">Bitte aktivieren Sie GPS</string>
 
 
 </resources>

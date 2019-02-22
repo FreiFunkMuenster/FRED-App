@@ -4,5 +4,6 @@
     <color name="colorPrimaryDark">#dc0067</color>
     <color name="colorAccent">#ffb400</color>
     <color name="mapOverlayBackground">#aaffffff</color>
+    <color name="text">#ff000000</color>
 
 </resources>

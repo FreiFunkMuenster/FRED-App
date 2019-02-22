@@ -67,6 +67,11 @@
         <activity android:name=".settings.NetworkSettingsActivity" />
         <activity android:name=".settings.SynchronizationSettingsActivity" />
         <activity android:name=".settings.LoadSettingsActivity" />
+        <activity android:name=".settings.TargetNetworksActivity"
+            android:parentActivityName=".settings.SettingsActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="de.florian_adelt.fred.settings.SettingsActivity" /></activity>
     </application>
 
 </manifest>

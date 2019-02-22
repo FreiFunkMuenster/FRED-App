@@ -54,6 +54,11 @@ public class SynchronizationTask extends NetworkTask {
                     "POST",
                     "{\"device-make\":\"" + Build.MANUFACTURER + "\", \"device-model\": \"" + Build.MODEL + "\"}");
 
+            if (response == null) {
+                Log.e("fred sync", "create user returned null");
+                return "";
+            }
+
             Type type = new TypeToken<CreateUserResponse>() {}.getType();
             Gson gson = new Gson();
             CreateUserResponse createUserResponse = gson.fromJson(response.getData(), type);

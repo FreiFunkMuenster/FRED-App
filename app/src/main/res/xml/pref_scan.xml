@@ -22,7 +22,7 @@
             android:title="@string/pref_title_scan_frequency_distance" />
     </PreferenceCategory>
 
-    <EditTextPreference
+    <!--<EditTextPreference
         android:capitalize="words"
         android:defaultValue="@string/pref_default_ssids"
         android:inputType="textCapWords"
@@ -30,7 +30,11 @@
         android:maxLines="100"
         android:selectAllOnFocus="true"
         android:singleLine="false"
-        android:title="@string/pref_title_ssids" />
+        android:title="@string/pref_title_ssids" />-->
+
+    <Preference android:title="@string/pref_title_ssids"
+        android:key="target_ssids_button"
+        android:summary=""/>
 
 
 </PreferenceScreen>

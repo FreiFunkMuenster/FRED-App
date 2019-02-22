@@ -2,6 +2,7 @@ package de.florian_adelt.fred.settings;
 
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.Intent;
 import android.os.Bundle;
 import android.preference.ListPreference;
 import android.preference.Preference;
@@ -15,6 +16,7 @@ import android.util.Log;
 import android.view.MenuItem;
 
 import de.florian_adelt.fred.R;
+import de.florian_adelt.fred.helper.NetworkListActivity;
 import de.florian_adelt.fred.service.ServiceStarter;
 
 public abstract class SubSettingsActivity extends AppCompatActivity {
@@ -136,6 +138,17 @@ public abstract class SubSettingsActivity extends AppCompatActivity {
                     public boolean onPreferenceClick(Preference preference) {
                         Log.e("Fred Upload", "Button Press");
                         ServiceStarter.startSynchronizationService(getContext(), 500, false);
+                        return true;
+                    }
+                });
+            }
+            Preference networksButton = findPreference("target_ssids_button");
+            if (networksButton != null) {
+                networksButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) {
+                        Log.e("Fred Upload", "Button Press");
+                       startActivity(new Intent(getActivity(), TargetNetworksActivity.class));
                         return true;
                     }
                 });

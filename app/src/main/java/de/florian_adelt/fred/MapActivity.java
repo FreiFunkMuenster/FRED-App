@@ -2,6 +2,7 @@ package de.florian_adelt.fred;
 
 import android.Manifest;
 import android.app.ActivityManager;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -42,6 +43,7 @@ import java.util.List;
 import de.florian_adelt.fred.database.DatabaseHelper;
 import de.florian_adelt.fred.helper.FredHelper;
 import de.florian_adelt.fred.helper.NetworkListActivity;
+import de.florian_adelt.fred.helper.Notification;
 import de.florian_adelt.fred.service.LocationService;
 import de.florian_adelt.fred.service.ServiceStarter;
 import de.florian_adelt.fred.service.SynchronizationService;
@@ -112,18 +114,8 @@ public class MapActivity extends AppCompatActivity {
 
         final IMapController mapController = map.getController();
         mapController.setZoom(20);
-        GeoPoint startPoint = new GeoPoint(preferences.getFloat("last_latitude", 48.8583f), preferences.getFloat("last_longitude", 2.2944f));
+        GeoPoint startPoint = new GeoPoint(preferences.getFloat("last_latitude", 50.5f), preferences.getFloat("last_longitude", 10.05f));
         mapController.setCenter(startPoint);
-
-        locationOverlay = new MyLocationNewOverlay(map);
-        locationOverlay.enableMyLocation(); // not on by default
-        //locationOverlay.disableFollowLocation();
-        locationOverlay.setDrawAccuracyEnabled(true);
-        locationOverlay.enableFollowLocation();
-        locationOverlay.setOptionsMenuEnabled(true);
-        //locationOverlay.setPersonIcon(BitmapFactory.decodeResource(this.getResources(), R.drawable.ic_location_icon));
-
-        map.getOverlays().add(locationOverlay);
 
 
 
@@ -149,13 +141,20 @@ public class MapActivity extends AppCompatActivity {
 
         currentWifis = findViewById(R.id.current_wifis);
 
+        boolean isEnabled = preferences.getBoolean("service_enabled", true);
         ToggleButton toggleButton = findViewById(R.id.toggleButton);
 
-        if (preferences.contains("service_enabled")) {
-            toggleButton.setChecked(preferences.getBoolean("service_enabled", true));
-        }
-
+        toggleButton.setChecked(isEnabled);
         serviceToggled();
+
+        if (isEnabled) {
+            Log.e("fred start", "service enabled");
+            enableLocationOverlay();
+        }
+        else {
+            Log.e("fred start", "service disabled");
+            disableLocationOverlay();
+        }
 
         toggleButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -215,16 +214,18 @@ public class MapActivity extends AppCompatActivity {
 
         stopService(new Intent(this, LocationService.class));
 
-        if (toggleButton.isChecked()) {
-            locationOverlay.enableMyLocation();
-            locationOverlay.enableFollowLocation();
+        if (preferences.getBoolean("service_enabled", true)) {
+            enableLocationOverlay();
             Log.e("fred service", "start service");
             //startService(new Intent(this, LocationService.class));
             ServiceStarter.startLocationService(this.getApplicationContext());
         }
         else {
-            locationOverlay.disableFollowLocation();
-            locationOverlay.disableMyLocation();
+
+            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            notificationManager.cancel(Notification.NO_GPS_ID);
+
+            disableLocationOverlay();
         }
 
     }
@@ -237,6 +238,19 @@ public class MapActivity extends AppCompatActivity {
             public void onReceive(Context context, Intent intent) {
 
                 Log.e("fred receiver", "received: ");
+
+                boolean isGpsUpdate = intent.hasExtra("de.florian_adelt.fred.update.gps");
+
+                if (isGpsUpdate) {
+                    if (intent.getBooleanExtra("de.florian_adelt.fred.update.gps", false)) {
+                        currentWifis.setText(getResources().getString(R.string.waiting_for_scan));
+                    }
+                    else {
+                        currentWifis.setText(getResources().getString(R.string.gps_disabled));
+                    }
+
+                    return;
+                }
 
                 Gson gson = new Gson();
                 ScanResult scanResult = gson.fromJson(intent.getStringExtra("de.florian_adelt.fred.update.scan"), ScanResult.class);
@@ -259,6 +273,9 @@ public class MapActivity extends AppCompatActivity {
                 StringBuilder builder = new StringBuilder();
 
                 for (int i=0; i<last; i++) {
+                    if (targetWifis.contains(wifis.get(i)) || otherWifis.contains(wifis.get(i))) {
+                        continue;
+                    }
                     if (helper.isTargetSsid(wifis.get(i).getSsid()))
                         targetWifis.add(wifis.get(i));
                     else
@@ -267,7 +284,7 @@ public class MapActivity extends AppCompatActivity {
 
                 for (int i=0; i<targetWifis.size() && i<max; i++) {
                     builder.append(wifiText(targetWifis.get(i), helper));
-                    if (i != max - 1)
+                    if (i != targetWifis.size() - 1)
                         builder.append(", ");
                 }
                 max = max - targetWifis.size();
@@ -386,6 +403,29 @@ public class MapActivity extends AppCompatActivity {
 
         if (hasPermissions())
             unregisterReceiver(updateReceiver);
+    }
+
+    private void enableLocationOverlay() {
+        if (locationOverlay != null) {
+            locationOverlay.enableMyLocation();
+            locationOverlay.enableFollowLocation();
+            return;
+        }
+
+        locationOverlay = new MyLocationNewOverlay(map);
+        locationOverlay.enableMyLocation();
+        locationOverlay.enableFollowLocation();
+        locationOverlay.setDrawAccuracyEnabled(true);
+        locationOverlay.setOptionsMenuEnabled(true);
+        //locationOverlay.setPersonIcon(BitmapFactory.decodeResource(this.getResources(), R.drawable.ic_location_icon));
+
+        map.getOverlays().add(locationOverlay);
+    }
+    private void disableLocationOverlay() {
+        if (locationOverlay != null) {
+            locationOverlay.disableMyLocation();
+            locationOverlay.disableFollowLocation();
+        }
     }
 
     // from https://stackoverflow.com/questions/600207/how-to-check-if-a-service-is-running-on-android

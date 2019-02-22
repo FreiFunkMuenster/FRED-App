@@ -4,26 +4,30 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.preference.PreferenceManager;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
+import java.util.List;
+
 public class FredHelper {
 
     protected Context context;
     protected SharedPreferences preferences;
-    protected String[] ssids;
+    protected List<String> ssids;
 
     public FredHelper(Context context) {
         this.context = context;
         preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        ssids = preferences.getString("target_ssids", "").split(";");
+        String json = preferences.getString("target_ssids", "");
+        Gson gson = new Gson();
+        Type type = new TypeToken<List<String>>() {}.getType();
+        ssids = gson.fromJson(json, type);
     }
 
 
 
     public boolean isTargetSsid(String ssid) {
-        for (String s : ssids) {
-            if (s.equals(ssid))
-                return true;
-        }
-
-        return false;
+        return ssids.contains(ssid);
     }
 }
