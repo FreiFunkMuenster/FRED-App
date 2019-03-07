@@ -18,7 +18,7 @@
     <string name="pref_default_display_name">John Smith</string>
 
     <string name="pref_title_ssids">Zu vermessende Netzwerke</string>
-    <string name="pref_default_ssids">[\"Funkloch\", \"ADELT00\"]</string><!-- testing -->
+    <string name="pref_default_ssids">[\"Funkloch\", \"ADELT00\", \"Freifunk\"]</string><!-- todo: for testing, only add relevant ssids here -->
 
     <string name="pref_title_upload_url">URL der Gegenstelle</string>
     <string name="pref_default_upload_url">https://fredbackend.ffmsl.de</string>
@@ -98,7 +98,7 @@
     <string name="record_on">Aufzeichnung an</string>
     <string name="record_off">Aufzeichnung aus</string>
     <string name="action_settings">Settings</string>
-    <string name="title_activity_network_list">NetworkListActivity</string>
+    <string name="title_activity_network_list">Netzwerkliste</string>
     <string name="sync_networks_to_scan_now">Netzwerkliste wird von der Gegenstelle geladen</string>
     <string name="sync_now">Jetzt Synchronisieren</string>
     <string name="network_scan_group">Messbedingungen</string>
@@ -118,6 +118,27 @@
     <string name="remove_ssid_dialog_title">SSID entfernen?</string>
     <string name="remove">Entfernen</string>
     <string name="gps_disabled">Bitte aktivieren Sie GPS</string>
+    <string name="error_000">Error 000: Nutzerdaten zur Synchronisation konnten nicht erstellt werden</string>
+    <string name="scans_synced_successfully">Netzwerke wurden erfolgreich synchronisiert</string>
+    <string name="error_001">Error 001: Die Netzwerksynchronisation konnte nicht abgeschlossen werden</string>
+    <string name="no_new_scans_to_upload">Es gibt keine weiteren Scans zum hochladen</string>
+    <string name="no_scan_so_far">Bisher wurden keine Daten gesammelt</string>
+    <string name="gps_enabled">GPS wurde aktiviert, warte auf Scan</string>
+    <string name="travelled_distance_not_far_enough">Die zurückgelegte Strecke war seit dem letzen Scan zu gering</string>
+    <string name="osm_copyright">© OpenStreetMap-Mitwirkende</string>
+    <string name="osm_copyright_href">https://www.openstreetmap.org/copyright</string>
+    <string name="app_is_inactive">FRED App ist inaktiv</string>
+    <string name="app_is_active">FRED App ist aktiv</string>
+    <string name="please_activate_gps">Bitte aktivieren Sie GPS</string>
+    <string name="please_activate_gps_long">Bitte aktivieren Sie GPS, damit die FRED App weiterhin genutzt werden kann. Tippen um den FRED Dienst zu beenden</string>
+    <string name="stop_fred_service">FRED Dienst beenden</string>
+    <string name="insufficent_accuracy">Die GPS-Genauigkeit (%1$d Meter) war zu gering für eine Messung</string>
+    <string name="pref_title_scan_frequency_accuracy">Min. GPS Genauigkeit (Meter)</string>
+    <string name="statistic_unsynced_scans">Scans seit letztem Upload: %1$d</string>
+    <string name="statistic_last_upload">Letzter Upload: %1$s</string>
+    <string name="touch_to_stop">Tippen zum beenden</string>
+    <string name="please_enable_wifi">Tippen zum Beenden</string>
+    <string name="app_is_inactive_no_wifi">FRED App benötigt WLAN</string>
 
 
 </resources>

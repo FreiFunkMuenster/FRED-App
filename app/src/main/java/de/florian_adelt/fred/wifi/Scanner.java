@@ -17,6 +17,7 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.provider.BaseColumns;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -28,7 +29,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import de.florian_adelt.fred.R;
 import de.florian_adelt.fred.database.DatabaseHelper;
+import de.florian_adelt.fred.helper.Notification;
 import de.florian_adelt.fred.service.LocationService;
 import de.florian_adelt.fred.service.SynchronizationTask;
 
@@ -69,12 +72,10 @@ public class Scanner {
         }
         if (location == null) {
             Log.e("fred scanner", "Tried to scan with null location");
+            service.killAndRestart();
             return;
         }
 
-        if (!wifiManager.isWifiEnabled()) {
-            wifiManager.setWifiEnabled(true);
-        }
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         float lastLatitude = preferences.getFloat("last_latitude", 0);
@@ -91,7 +92,32 @@ public class Scanner {
         if (distance < Float.parseFloat(preferences.getString("scan_frequency_distance", "10"))) {
             Log.e("Fred Scanner", "Travelled Distance was not enough: " + distance + "/" + preferences.getString("scan_frequency_distance", "10"));
             service.killAndRestart();
+            Intent i = new Intent("de.florian_adelt.fred.snackbar");
+            Bundle extras = new Bundle();
+            extras.putString("de.florian_adelt.fred.snackbar.message", context.getString(R.string.travelled_distance_not_far_enough));
+            i.putExtras(extras);
+            context.sendBroadcast(i);
             return;
+        }
+
+        if (location.getAccuracy() > Float.parseFloat(preferences.getString("scan_frequency_accuracy", "15"))) {
+            Log.e("Fred Scanner", "Accuracy was insufficent: " + location.getAccuracy());
+            service.killAndRestart();
+            Intent i = new Intent("de.florian_adelt.fred.snackbar");
+            Bundle extras = new Bundle();
+            extras.putString("de.florian_adelt.fred.snackbar.message", context.getString(R.string.insufficent_accuracy, (int) location.getAccuracy()));
+            i.putExtras(extras);
+            context.sendBroadcast(i);
+            return;
+        }
+
+
+        if (!wifiManager.isWifiEnabled()) {
+            //wifiManager.setWifiEnabled(true);
+            Notification.enableWifiNotification(context);
+        }
+        else {
+            Notification.cancel(context, Notification.NO_WIFI_ID);
         }
 
         isScanning = true;
@@ -150,7 +176,11 @@ public class Scanner {
                 values.put("accuracy", location.getAccuracy());
 
 
-                long id = db.insert("Scans", null, values);
+                long id = -1;
+
+                if (!scanResults.isEmpty()) {
+                    id = db.insert("Scans", null, values);
+                }
 
                 de.florian_adelt.fred.wifi.ScanResult scanResult = new de.florian_adelt.fred.wifi.ScanResult(
                         id,

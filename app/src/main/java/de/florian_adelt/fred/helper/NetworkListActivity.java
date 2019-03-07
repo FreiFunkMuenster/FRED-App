@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.SearchView;
+import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -79,7 +80,7 @@ public class NetworkListActivity extends AppCompatActivity {
         DatabaseHelper helper = new DatabaseHelper(this);
         SQLiteDatabase db = helper.getReadableDatabase();
 
-        Cursor cursor = db.query("Scans", null, null, null, null, null, "_id desc");
+        Cursor cursor = db.query("Scans", null, "synced_at IS NULL", null, null, null, "_id desc");
 
         while (cursor.moveToNext()) {
 
@@ -89,7 +90,7 @@ public class NetworkListActivity extends AppCompatActivity {
                 Gson gson = new Gson();
                 final List<Wifi> currentWifis = gson.fromJson(cursor.getString(cursor.getColumnIndex("result")), type);
 
-                Timestamp stamp = new Timestamp(System.currentTimeMillis());
+                Timestamp stamp = new Timestamp(cursor.getLong(cursor.getColumnIndex("time")));
                 Date date = new Date(stamp.getTime());
                 SimpleDateFormat sdf = new SimpleDateFormat("H:mm", Locale.GERMAN);
                 sdf.setTimeZone(TimeZone.getDefault());
@@ -129,10 +130,37 @@ public class NetworkListActivity extends AppCompatActivity {
 
         }
 
+
+        adapter.notifyDataSetChanged();
+
+        ((TextView)findViewById(R.id.statistic_unsynced_scans)).setText(getString(R.string.statistic_unsynced_scans, cursor.getCount()));
+
+
+        cursor.close();
+
+
+        String formattedDate = "Nie";
+
+        //cursor = db.query(true, "Scans", null, "synced_at NOT NULL", null, null, null, "_id desc");
+        cursor = db.query(true, "Scans", null, "synced_at NOT NULL", null, null, null, "_id DESC", "1");
+
+        while (cursor.moveToNext()) {
+
+            Timestamp stamp = new Timestamp(cursor.getLong(cursor.getColumnIndex("synced_at")));
+            Date date = new Date(stamp.getTime());
+            SimpleDateFormat sdf = new SimpleDateFormat("MM.dd. H:mm", Locale.GERMAN);
+            sdf.setTimeZone(TimeZone.getDefault());
+            formattedDate = sdf.format(date) + " Uhr";
+
+        }
+
         cursor.close();
         db.close();
 
-        adapter.notifyDataSetChanged();
+
+        ((TextView)findViewById(R.id.statistic_last_upload)).setText(getString(R.string.statistic_last_upload, formattedDate));
+
+
     }
 
 

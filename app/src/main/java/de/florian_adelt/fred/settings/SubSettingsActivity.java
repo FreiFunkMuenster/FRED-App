@@ -137,7 +137,7 @@ public abstract class SubSettingsActivity extends AppCompatActivity {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         Log.e("Fred Upload", "Button Press");
-                        ServiceStarter.startSynchronizationService(getContext(), 500, false);
+                        ServiceStarter.startSynchronizationService(getContext(), 500, false, true);
                         return true;
                     }
                 });

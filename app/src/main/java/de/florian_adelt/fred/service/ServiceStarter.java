@@ -5,10 +5,13 @@ import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
 import java.util.Objects;
+
+import de.florian_adelt.fred.helper.Logger;
 
 public class ServiceStarter {
 
@@ -44,10 +47,10 @@ public class ServiceStarter {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         long wait = Integer.parseInt(preferences.getString("sync_frequency", "180")) * 60 * 1000;
         boolean wifiOnly = preferences.getBoolean("upload_only_wifi", true);
-        startSynchronizationService(context, wait, wifiOnly);
+        startSynchronizationService(context, wait, wifiOnly, false);
     }
 
-    public static void startSynchronizationService(Context context, long wait, boolean wifiOnly) {
+    public static void startSynchronizationService(Context context, long wait, boolean wifiOnly, boolean notify) {
         Log.e("fred service", "check upload service start");
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -63,8 +66,15 @@ public class ServiceStarter {
             builder.setOverrideDeadline(wait); // maximum delay
             if (wifiOnly)
                 builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_UNMETERED);
+            PersistableBundle bundle = new PersistableBundle();
+            bundle.putBoolean("notify", notify);
+            builder.setExtras(bundle);
+
             JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
             Objects.requireNonNull(jobScheduler).schedule(builder.build());
+        }
+        else {
+            Logger.log(context, "Fred synchronization service", "auto_upload is set to false, won't start sync service", Logger.LEVEL_INFO);
         }
     }
 

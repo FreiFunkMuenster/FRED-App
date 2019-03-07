@@ -2,12 +2,15 @@ package de.florian_adelt.fred.database;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
+import android.os.Bundle;
 import android.provider.BaseColumns;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -20,6 +23,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.florian_adelt.fred.helper.Logger;
 import de.florian_adelt.fred.wifi.ScanResult;
 import de.florian_adelt.fred.wifi.Wifi;
 
@@ -35,7 +39,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
 
-        final String sql = "CREATE TABLE Scans (" +
+        String sql = "CREATE TABLE Scans (" +
                     BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "time INTEGER NOT NULL DEFAULT 0, " +
                     "latitude REAL NOT NULL DEFAULT 0, " +
@@ -44,6 +48,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     "accuracy REAL NOT NULL DEFAULT 0, " +
                     "status TEXT NOT NULL DEFAULT 'success', " +
                     "result TEXT NOT NULL DEFAULT '[]'," +
+                    "synced_at INTEGER DEFAULT NULL" +
+                ")";
+
+        sqLiteDatabase.execSQL(sql);
+
+        sql = "CREATE TABLE Logs (" +
+                    BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    "time INTEGER NOT NULL DEFAULT 0, " +
+                    "level INTEGER NOT NULL DEFAULT 0, " +
+                    "message TEXT NOT NULL DEFAULT ''," +
                     "synced_at INTEGER DEFAULT NULL" +
                 ")";
 
@@ -138,7 +152,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     wifis
             );
 
-            result.add(scanResult);
+            if (wifis.size() > 0)  // only sync scans with at least one found wifi network
+                result.add(scanResult);
 
         }
 
@@ -151,6 +166,51 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     }
 
+    public ScanResult getLastScanResult() {
+        SQLiteDatabase db = getReadableDatabase();
+        String[] columns = {"*"};
+        Cursor cursor = db.query(
+                false,
+                "Scans",
+                columns,
+                null,
+                null,
+                null,
+                null,
+                "_id",
+                "1"
+        );
+        ScanResult result = null;
+
+        while (cursor.moveToNext()) {
+            List<Wifi> wifis = new ArrayList<>();
+            try {
+
+                Type type = new TypeToken<List<Wifi>>() {}.getType();
+                Gson gson = new Gson();
+                wifis = gson.fromJson(cursor.getString(cursor.getColumnIndex("result")), type);
+
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            result = new ScanResult(
+                    cursor.getInt(cursor.getColumnIndex("_id")),
+                    cursor.getLong(cursor.getColumnIndex("time")),
+                    cursor.getDouble(cursor.getColumnIndex("latitude")),
+                    cursor.getDouble(cursor.getColumnIndex("longitude")),
+                    cursor.getDouble(cursor.getColumnIndex("altitude")),
+                    cursor.getDouble(cursor.getColumnIndex("accuracy")),
+                    cursor.getString(cursor.getColumnIndex("status")),
+                    wifis
+            );
+        }
+
+        cursor.close();
+        db.close();
+        return result;
+    }
+
 
     public void setSynced() {
         SQLiteDatabase db = getWritableDatabase();
@@ -161,6 +221,34 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.update("Scans", cv, "synced_at IS NULL", null);
 
         db.close();
+    }
+
+
+
+    public void log(String msg, int level) {
+        SQLiteDatabase db = getWritableDatabase();
+
+        try {
+
+            long time = System.currentTimeMillis();
+            ContentValues values = new ContentValues();
+            values.put("time", time);
+            values.put("level", level);
+            values.put("message", msg);
+
+            long id = db.insert("Logs", null, values);
+
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        finally {
+            db.close();
+        }
+    }
+
+    public void log(String msg) {
+        log(msg, Logger.LEVEL_INFO);
     }
 
 }

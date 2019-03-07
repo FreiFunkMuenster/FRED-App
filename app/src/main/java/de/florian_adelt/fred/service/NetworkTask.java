@@ -1,8 +1,12 @@
 package de.florian_adelt.fred.service;
 
+import android.content.Context;
 import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
@@ -13,7 +17,16 @@ import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import de.florian_adelt.fred.R;
+
 public abstract class NetworkTask extends AsyncTask<String, String, String> {
+
+
+    protected Context context;
+
+    public NetworkTask(Context context) {
+        this.context = context;
+    }
 
     @Nullable
     protected Response request(String endpointUrl, String method, String payload) {
@@ -100,6 +113,24 @@ public abstract class NetworkTask extends AsyncTask<String, String, String> {
 
         public void setId(String id) {
             this.id = id;
+        }
+    }
+
+    protected void showToast(final int textResource) {
+        Log.e("fred sync", "showing toast");
+        try {
+
+            Handler handler = new Handler(Looper.getMainLooper());
+            handler.post(new Runnable() {
+
+                @Override
+                public void run() {
+                    Toast.makeText(context, textResource, Toast.LENGTH_SHORT).show();
+                }
+            });
+        }
+        catch (Exception e) {
+            e.printStackTrace();
         }
     }
 

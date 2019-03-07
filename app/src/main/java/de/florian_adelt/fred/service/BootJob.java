@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.util.Log;
 
 public class BootJob extends JobService {
-    private static final String TAG = "Fred SyncService";
+    private static final String TAG = "Fred LocationService";
 
     @Override
     public boolean onStartJob(JobParameters params) {

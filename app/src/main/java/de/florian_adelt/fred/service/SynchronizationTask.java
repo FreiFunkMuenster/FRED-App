@@ -1,11 +1,13 @@
 package de.florian_adelt.fred.service;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.Nullable;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -21,6 +23,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.List;
 
+import de.florian_adelt.fred.R;
 import de.florian_adelt.fred.database.DatabaseHelper;
 
 public class SynchronizationTask extends NetworkTask {
@@ -28,10 +31,13 @@ public class SynchronizationTask extends NetworkTask {
 
     protected SharedPreferences preferences;
     protected DatabaseHelper dbHelper;
+    protected boolean notify;
 
-    public SynchronizationTask(SharedPreferences preferences, DatabaseHelper dbHelper) {
+    public SynchronizationTask(Context context, SharedPreferences preferences, DatabaseHelper dbHelper, boolean notify) {
+        super(context);
         this.preferences = preferences;
         this.dbHelper = dbHelper;
+        this.notify = notify;
     }
 
     @Override
@@ -56,6 +62,7 @@ public class SynchronizationTask extends NetworkTask {
 
             if (response == null) {
                 Log.e("fred sync", "create user returned null");
+                showToast(R.string.error_000);
                 return "";
             }
 
@@ -78,9 +85,19 @@ public class SynchronizationTask extends NetworkTask {
         //System.out.println(response.toString());
         if (response != null && response.getCode() >= 200 && response.getCode() < 300) {
             dbHelper.setSynced();
+            showToast(R.string.scans_synced_successfully);
+        }
+        else {
+            showToast(R.string.error_001);
         }
 
         return "";
     }
 
+    @Override
+    protected void showToast(int textResource) {
+        Log.e("Fred sync", "show toast: " + notify);
+        if (notify)
+            super.showToast(textResource);
+    }
 }

@@ -12,8 +12,10 @@ import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -63,6 +65,8 @@ public class MapActivity extends AppCompatActivity {
     protected TextView currentWifis;
 
     protected BroadcastReceiver updateReceiver;
+    protected BroadcastReceiver snackbarReceiver;
+    protected BroadcastReceiver stopReceiver;
 
     protected MyLocationNewOverlay locationOverlay;
 
@@ -142,7 +146,7 @@ public class MapActivity extends AppCompatActivity {
         currentWifis = findViewById(R.id.current_wifis);
 
         boolean isEnabled = preferences.getBoolean("service_enabled", true);
-        ToggleButton toggleButton = findViewById(R.id.toggleButton);
+        final ToggleButton toggleButton = findViewById(R.id.toggleButton);
 
         toggleButton.setChecked(isEnabled);
         serviceToggled();
@@ -163,10 +167,27 @@ public class MapActivity extends AppCompatActivity {
             }
         });
 
+        findViewById(R.id.follow_fab).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                locationOverlay.enableFollowLocation();
+            }
+        });
+
         currentWifis.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startActivity(new Intent(getApplicationContext(), NetworkListActivity.class));
+            }
+        });
+
+        TextView osmButton = findViewById(R.id.osm_copyright);
+        osmButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Uri uri = Uri.parse(getString(R.string.osm_copyright_href));
+                Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+                startActivity(intent);
             }
         });
 
@@ -179,6 +200,8 @@ public class MapActivity extends AppCompatActivity {
         ServiceStarter.startSynchronizationService(getApplicationContext());
         ServiceStarter.startLocationService(getApplicationContext(), 0);  // Start first location Service immediately
 
+
+        updateStatus(new Intent(), new DatabaseHelper(getApplicationContext()).getLastScanResult());
 
 
         /*lm.requestLocationUpdates(
@@ -222,8 +245,10 @@ public class MapActivity extends AppCompatActivity {
         }
         else {
 
-            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-            notificationManager.cancel(Notification.NO_GPS_ID);
+            //NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            //notificationManager.cancel(Notification.NO_GPS_ID);
+
+            Notification.cancel((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE), Notification.NO_GPS_ID);
 
             disableLocationOverlay();
         }
@@ -237,78 +262,140 @@ public class MapActivity extends AppCompatActivity {
             @Override
             public void onReceive(Context context, Intent intent) {
 
-                Log.e("fred receiver", "received: ");
-
-                boolean isGpsUpdate = intent.hasExtra("de.florian_adelt.fred.update.gps");
-
-                if (isGpsUpdate) {
-                    if (intent.getBooleanExtra("de.florian_adelt.fred.update.gps", false)) {
-                        currentWifis.setText(getResources().getString(R.string.waiting_for_scan));
-                    }
-                    else {
-                        currentWifis.setText(getResources().getString(R.string.gps_disabled));
-                    }
-
-                    return;
-                }
-
                 Gson gson = new Gson();
-                ScanResult scanResult = gson.fromJson(intent.getStringExtra("de.florian_adelt.fred.update.scan"), ScanResult.class);
-
-                List<Wifi> wifis = scanResult.getSortedWifiList();
-
-                if (wifis.size() == 0) {
-                    currentWifis.setText(getResources().getString(R.string.last_scan_resulted_empty));
-                    return;
-                }
-
-                int max = 3;
-                int last = wifis.size() > max ? max : wifis.size();
-
-                List<Wifi> targetWifis = new ArrayList<>();
-                List<Wifi> otherWifis = new ArrayList<>();
-
-                FredHelper helper = new FredHelper(context);
-
-                StringBuilder builder = new StringBuilder();
-
-                for (int i=0; i<last; i++) {
-                    if (targetWifis.contains(wifis.get(i)) || otherWifis.contains(wifis.get(i))) {
-                        continue;
-                    }
-                    if (helper.isTargetSsid(wifis.get(i).getSsid()))
-                        targetWifis.add(wifis.get(i));
-                    else
-                        otherWifis.add(wifis.get(i));
-                }
-
-                for (int i=0; i<targetWifis.size() && i<max; i++) {
-                    builder.append(wifiText(targetWifis.get(i), helper));
-                    if (i != targetWifis.size() - 1)
-                        builder.append(", ");
-                }
-                max = max - targetWifis.size();
-                for (int i=0; i<otherWifis.size() && i<max; i++) {
-                    builder.append(wifiText(otherWifis.get(i), helper));
-                    if (i != max - 1)
-                        builder.append(", ");
-                }
-
-                if (wifis.size() > 3) {
-                    builder.append(" ");
-                    builder.append(getResources().getString(R.string.and_x_other, wifis.size() - 3));
-                }
-                String result = builder.toString();
-                currentWifis.setText(Html.fromHtml(result));
-                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                preferences.edit()
-                        .putString("cached_last_scan_result", result)
-                        .apply();
+                updateStatus(intent, gson.fromJson(intent.getStringExtra("de.florian_adelt.fred.update.scan"), ScanResult.class));
 
             }
         };
         registerReceiver(updateReceiver, new IntentFilter("de.florian_adelt.fred.update"));
 
+
+        snackbarReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                Log.e("fred snackbar", "showing snackbar");
+
+                //int messageId = intent.getIntExtra("de.florian_adelt.fred.snackbar.message_id", 0);
+                //if (messageId == 0) {
+                //    Log.e("fred snackbar", "no message id given");
+                //    return;
+                //}
+                Snackbar.make(findViewById(R.id.main_map_layout), intent.getStringExtra("de.florian_adelt.fred.snackbar.message"), Snackbar.LENGTH_LONG).show();
+            }
+        };
+        registerReceiver(snackbarReceiver, new IntentFilter("de.florian_adelt.fred.snackbar"));
+
+        stopReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                Log.e("fred stop receiver", "received");
+
+                int notificationId = intent.getIntExtra("de.florian_adelt.fred.stop.notification_id", -1);
+                int[] toCancel = { Notification.NO_GPS_ID, Notification.ACTIVE_ID, Notification.NO_WIFI_ID };
+                for (int id : toCancel) {
+                    Notification.cancel((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE), id);
+                }
+
+                ToggleButton toggleButton = findViewById(R.id.toggleButton);
+                toggleButton.setChecked(false);
+                serviceToggled();
+
+
+
+            }
+        };
+        registerReceiver(stopReceiver, new IntentFilter("de.florian_adelt.fred.stop"));
+
+    }
+
+    public void updateStatus(Intent intent, ScanResult scanResult) {
+
+        Log.e("fred receiver", "received: ");
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        boolean isGpsUpdate = intent.hasExtra("de.florian_adelt.fred.update.gps");
+
+        if (isGpsUpdate) {
+            if (intent.getBooleanExtra("de.florian_adelt.fred.update.gps", false)) {
+
+                if (currentWifis.getText().equals(getResources().getString(R.string.gps_disabled))) {
+                    // GPS was switched to enabled since last scan
+                    currentWifis.setText(getResources().getString(R.string.gps_enabled));
+                }
+                else {
+                    currentWifis.setText(Html.fromHtml(preferences.getString("cached_last_scan_result", getResources().getString(R.string.waiting_for_scan))));
+                }
+            }
+            else {
+                currentWifis.setText(getResources().getString(R.string.gps_disabled));
+            }
+
+            return;
+        }
+
+        if (scanResult == null) {
+            Log.e("fred receiver", "scan result was null");
+            currentWifis.setText(getResources().getString(R.string.waiting_for_scan));
+            return;
+        }
+
+        List<Wifi> wifis = scanResult.getSortedWifiList();
+
+        if (wifis.size() == 0) {
+            currentWifis.setText(getResources().getString(R.string.last_scan_resulted_empty));
+            return;
+        }
+
+        int max = 3;
+        int last = wifis.size() > max ? max : wifis.size();
+
+        List<Wifi> targetWifis = new ArrayList<>();
+        List<Wifi> otherWifis = new ArrayList<>();
+
+        FredHelper helper = new FredHelper(getApplicationContext());
+
+        StringBuilder builder = new StringBuilder();
+
+        for (int i=0; i<last; i++) {
+            boolean isShownSsid = false;
+            for (Wifi w : targetWifis) {
+                if (wifis.get(i).getSsid().equals(w.getSsid())) {
+                    isShownSsid = true;
+                    break;
+                }
+            }
+            if (isShownSsid) {
+                continue;
+            }
+            if (helper.isTargetSsid(wifis.get(i).getSsid()))
+                targetWifis.add(wifis.get(i));
+            else
+                otherWifis.add(wifis.get(i));
+        }
+
+        for (int i=0; i<targetWifis.size() && i<max; i++) {
+            builder.append(wifiText(targetWifis.get(i), helper));
+            if (i != targetWifis.size() - 1)
+                builder.append(", ");
+        }
+        max = max - targetWifis.size();
+        for (int i=0; i<otherWifis.size() && i<max; i++) {
+            builder.append(wifiText(otherWifis.get(i), helper));
+            if (i != max - 1)
+                builder.append(", ");
+        }
+
+        if (wifis.size() > 3) {
+            builder.append(" ");
+            builder.append(getResources().getString(R.string.and_x_other, wifis.size() - 3));
+        }
+        String result = builder.toString();
+        currentWifis.setText(Html.fromHtml(result));
+        preferences.edit()
+                .putString("cached_last_scan_result", result)
+                .apply();
     }
 
     protected String wifiText(Wifi wifi, FredHelper helper) {
@@ -401,8 +488,10 @@ public class MapActivity extends AppCompatActivity {
         if (map != null)
             map.onPause();  //needed for compass, my location overlays, v6.0.0 and up
 
-        if (hasPermissions())
+        if (hasPermissions()) {
             unregisterReceiver(updateReceiver);
+            unregisterReceiver(snackbarReceiver);
+        }
     }
 
     private void enableLocationOverlay() {
