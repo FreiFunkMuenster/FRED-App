@@ -154,7 +154,7 @@ public class NetworkListActivity extends AppCompatActivity {
 
             Timestamp stamp = new Timestamp(cursor.getLong(cursor.getColumnIndex("synced_at")));
             Date date = new Date(stamp.getTime());
-            SimpleDateFormat sdf = new SimpleDateFormat("MM.dd. H:mm", Locale.GERMAN);
+            SimpleDateFormat sdf = new SimpleDateFormat("dd.MM. H:mm", Locale.GERMAN);
             sdf.setTimeZone(TimeZone.getDefault());
             formattedDate = sdf.format(date) + " Uhr";
 
