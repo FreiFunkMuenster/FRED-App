@@ -15,10 +15,12 @@ import android.util.Log;
 
 import java.util.Objects;
 
+import de.florian_adelt.fred.helper.Logger;
+
 public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.e("fred boot", "fred boot event received");
+        Logger.log(context, "fred boot", "fred boot event received");
         Log.e("fred boot", intent.getAction());
 
         ServiceStarter.startLocationService(context);

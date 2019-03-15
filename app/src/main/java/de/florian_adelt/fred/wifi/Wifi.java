@@ -96,7 +96,7 @@ public class Wifi implements SimpleListable {
 
     @Override
     public String getSubtitle() {
-        return "Level: " + level;
+        return "Level: " + level + "\nBSSID: " + bssid;
     }
 
     @Override

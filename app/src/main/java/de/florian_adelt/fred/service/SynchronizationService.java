@@ -16,6 +16,7 @@ import java.util.List;
 
 import de.florian_adelt.fred.R;
 import de.florian_adelt.fred.database.DatabaseHelper;
+import de.florian_adelt.fred.helper.Logger;
 import de.florian_adelt.fred.wifi.ScanResult;
 
 public class SynchronizationService extends JobService {
@@ -23,7 +24,7 @@ public class SynchronizationService extends JobService {
     @Override
     public boolean onStartJob(JobParameters jobParameters) {
 
-        Log.e("fred sync", "sync started");
+        Logger.log(getApplicationContext(), "fred sync", "sync started");
         DatabaseHelper db = new DatabaseHelper(getApplicationContext());
         List<ScanResult> scanResults = db.getUnsynchedScans();
         boolean notify = jobParameters.getExtras().getBoolean("notify", false);

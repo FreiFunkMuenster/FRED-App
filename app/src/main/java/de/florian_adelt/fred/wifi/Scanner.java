@@ -31,6 +31,7 @@ import java.util.Map;
 
 import de.florian_adelt.fred.R;
 import de.florian_adelt.fred.database.DatabaseHelper;
+import de.florian_adelt.fred.helper.Logger;
 import de.florian_adelt.fred.helper.Notification;
 import de.florian_adelt.fred.service.LocationService;
 import de.florian_adelt.fred.service.SynchronizationTask;
@@ -67,11 +68,11 @@ public class Scanner {
 
     public void scan(Location location) {
         if (isScanning) {
-            Log.e("fred scanner", "scanning already in progress");
+            Logger.log(context, "fred scanner", "scanning already in progress");
             return;
         }
         if (location == null) {
-            Log.e("fred scanner", "Tried to scan with null location");
+            Logger.log(context, "fred scanner", "Tried to scan with null location, restarting");
             service.killAndRestart();
             return;
         }
@@ -83,14 +84,16 @@ public class Scanner {
 
         this.location = location;
 
+        Logger.log(context, "fred scanner", "set location to: " + location.getLatitude() + ", " + location.getLongitude());
+
 
         float distance = distFrom(lastLatitude, lastLongitude, (float) location.getLatitude(), (float) location.getLongitude());
 
 
         Log.e("Fred Scanner", "Travelled Distance: " + distance);
 
-        if (distance < Float.parseFloat(preferences.getString("scan_frequency_distance", "10"))) {
-            Log.e("Fred Scanner", "Travelled Distance was not enough: " + distance + "/" + preferences.getString("scan_frequency_distance", "10"));
+        if (distance < preferences.getInt("scan_frequency_distance", 10)) {
+            Logger.log(context, "Fred Scanner", "Travelled Distance was not enough: " + distance + "/" + preferences.getInt("scan_frequency_distance", 10));
             service.killAndRestart();
             Intent i = new Intent("de.florian_adelt.fred.snackbar");
             Bundle extras = new Bundle();
@@ -100,8 +103,8 @@ public class Scanner {
             return;
         }
 
-        if (location.getAccuracy() > Float.parseFloat(preferences.getString("scan_frequency_accuracy", "15"))) {
-            Log.e("Fred Scanner", "Accuracy was insufficent: " + location.getAccuracy());
+        if (location.getAccuracy() > preferences.getInt("scan_frequency_accuracy", 15)) {
+            Logger.log(context, "Fred Scanner", "Accuracy was insufficient: " + location.getAccuracy());
             service.killAndRestart();
             Intent i = new Intent("de.florian_adelt.fred.snackbar");
             Bundle extras = new Bundle();
@@ -130,17 +133,18 @@ public class Scanner {
 
         isScanning = false;
 
-        Log.e("fred scanner", "scanning didn't start");
+        Logger.log(context, "fred scanner", "scanning didn't start");
         Toast.makeText(context, "Wifi Scan nicht möglich", Toast.LENGTH_SHORT).show();
     }
 
     public void handleScanResult(Context context, Intent intent) {
         if (this.location == null) {
-            Log.e("fred scanner", "Tried to scan with null location");
+            Logger.log(context, "fred scanner", "Tried to handle scan results with null location");
             return;
         }
-        Log.e("fred handle", "scan results");
+        Log.e("fred scanner", "scan results");
         List<ScanResult> results = wifiManager.getScanResults();
+        Log.e("fred scanner", "found " + results.size() + " networks in total (raw value)");
         scanResults.clear();
 
 
@@ -169,45 +173,41 @@ public class Scanner {
             ContentValues values = new ContentValues();
             values.put("time", time);
             values.put("result", scanResultJson);
-            if (location != null) {
-                values.put("latitude", location.getLatitude());
-                values.put("longitude", location.getLongitude());
-                values.put("altitude", location.getAltitude());
-                values.put("accuracy", location.getAccuracy());
+
+            values.put("latitude", location.getLatitude());
+            values.put("longitude", location.getLongitude());
+            values.put("altitude", location.getAltitude());
+            values.put("accuracy", location.getAccuracy());
 
 
-                long id = -1;
+            long id = -1;
 
-                if (!scanResults.isEmpty()) {
-                    id = db.insert("Scans", null, values);
-                }
-
-                de.florian_adelt.fred.wifi.ScanResult scanResult = new de.florian_adelt.fred.wifi.ScanResult(
-                        id,
-                        time,
-                        location.getLatitude(),
-                        location.getLongitude(),
-                        location.getAltitude(),
-                        location.getAccuracy(),
-                        "success",
-                        scanResults);
-
-                String json = gson.toJson(scanResult);
-                Intent i = new Intent("de.florian_adelt.fred.update");
-                Bundle extras = new Bundle();
-                extras.putString("de.florian_adelt.fred.update.scan", json);
-                i.putExtras(extras);
-                context.sendBroadcast(i);
-                Log.e("fred broadcast", "broadcasting");
-            }
-            else {
-                Log.e("fred scanner", "location was null, skipped update broadcast");
+            if (!scanResults.isEmpty()) {
+                id = db.insert("Scans", null, values);
             }
 
+            de.florian_adelt.fred.wifi.ScanResult scanResult = new de.florian_adelt.fred.wifi.ScanResult(
+                    id,
+                    time,
+                    location.getLatitude(),
+                    location.getLongitude(),
+                    location.getAltitude(),
+                    location.getAccuracy(),
+                    "success",
+                    scanResults);
+
+            String json = gson.toJson(scanResult);
+            Intent i = new Intent("de.florian_adelt.fred.update");
+            Bundle extras = new Bundle();
+            extras.putString("de.florian_adelt.fred.update.scan", json);
+            i.putExtras(extras);
+            context.sendBroadcast(i);
+            Log.e("fred broadcast", "broadcasting");
 
         }
         catch (Exception e) {
             e.printStackTrace();
+            Logger.e(context, "fred scanner", e);
         }
         finally {
             db.close();
@@ -215,44 +215,17 @@ public class Scanner {
         }
 
         service.killAndRestart();
-
     }
-
 
     public String getScanResultJson() {
 
         Gson gson = new Gson();
         return gson.toJson(scanResults);
-
-
-
-        /*StringBuilder builder = new StringBuilder();
-        builder.append('[');
-
-        for (int i=0; i < scanResults.size(); i++) {
-            builder.append('{');
-            builder.append("ssid: ");
-            builder.append('"');
-            builder.append(scanResults.get(i).getSsid());
-            builder.append('"');
-            builder.append(',');
-            builder.append("level: ");
-            builder.append(scanResults.get(i).getLevel());
-            builder.append('}');
-            if (i != scanResults.size() - 1)
-                builder.append(',');
-        }
-
-        builder.append(']');
-
-        return builder.toString();*/
     }
 
     public void dispose() {
         context.unregisterReceiver(wifiReceiver);
     }
-
-
 
 
     /* from: https://stackoverflow.com/questions/837872/calculate-distance-in-meters-when-you-know-longitude-and-latitude-in-java */

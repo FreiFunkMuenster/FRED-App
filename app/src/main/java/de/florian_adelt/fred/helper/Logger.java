@@ -18,7 +18,14 @@ public class Logger {
         helper.log("[" + tag + "]: " + message, level);
         Log.e(tag, message);
 
+    }
 
+    public static void log(Context context, String tag, String message) {
+        log(context, tag, message, LEVEL_INFO);
+    }
+
+    public static void e(Context context, String tag, Exception e) {
+        log(context, tag, e.getMessage(), LEVEL_ERROR);
     }
 
 

@@ -4,6 +4,7 @@ import android.app.job.JobInfo;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.PersistableBundle;
 import android.preference.PreferenceManager;
@@ -12,13 +13,14 @@ import android.util.Log;
 import java.util.Objects;
 
 import de.florian_adelt.fred.helper.Logger;
+import de.florian_adelt.fred.helper.Notification;
 
 public class ServiceStarter {
 
 
     public static void startLocationService(Context context) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        long wait = Integer.parseInt(preferences.getString("scan_frequency_time", "20")) * 1000;
+        long wait = preferences.getInt("scan_frequency_time", 20) * 1000;
         startLocationService(context, wait);
     }
 
@@ -27,17 +29,31 @@ public class ServiceStarter {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         if (preferences.getBoolean("service_enabled", true)) {  // aggressive
-            Log.e("fred service", "start service job");
-            //context.startService(new Intent(context, LocationService.class));  // seems to crash
-            ComponentName serviceComponent = new ComponentName(context, BootJob.class);
-            JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
+            if (preferences.getLong("service_stop_at_time", Long.MAX_VALUE) > System.currentTimeMillis()) {
 
-            //long wait = Integer.parseInt(preferences.getString("scan_frequency_time", "20")) * 1000;
+                Log.e("fred service", "start service job");
+                //context.startService(new Intent(context, LocationService.class));  // seems to crash
+                ComponentName serviceComponent = new ComponentName(context, BootJob.class);
+                JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
 
-            builder.setMinimumLatency(wait); // wait at least
-            builder.setOverrideDeadline(wait); // maximum delay
-            JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
-            Objects.requireNonNull(jobScheduler).schedule(builder.build());
+                //long wait = Integer.parseInt(preferences.getString("scan_frequency_time", "20")) * 1000;
+
+                Logger.log(context, "fred location service", "starting location service with delay of: " + wait);
+
+                builder.setMinimumLatency(wait); // wait at least
+                builder.setOverrideDeadline(wait); // maximum delay
+                JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
+                Objects.requireNonNull(jobScheduler).schedule(builder.build());
+            }
+            else {
+                Log.e("fred service", "Service was shut down by timer (overdue by " + (preferences.getLong("service_stop_at_time", Long.MAX_VALUE) - System.currentTimeMillis()) + ")");
+                preferences.edit().putBoolean("service_enabled", false).apply();
+
+                Intent broadcastIntent = new Intent("de.florian_adelt.fred.stop");
+                context.sendBroadcast(broadcastIntent);
+                Notification.cancelAll(context);
+                Notification.autoDisabledNotification(context);
+            }
         }
 
     }
@@ -78,4 +94,21 @@ public class ServiceStarter {
         }
     }
 
+    public static void setTimeToStop(Context context) {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        setTimeToStop(context, Long.parseLong(preferences.getString("scan_time_to_stop", "0")));
+    }
+    public static void setTimeToStop(Context context, long value) {
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        long stopAt;
+        if (value == 0) {
+            stopAt = Long.MAX_VALUE;
+        }
+        else {
+            stopAt = System.currentTimeMillis() + value * 1000;
+        }
+        Log.e("fred kill timer", "current: " + System.currentTimeMillis() + ", target: " + stopAt);
+        preferences.edit().putLong("service_stop_at_time", stopAt).apply();
+    }
 }

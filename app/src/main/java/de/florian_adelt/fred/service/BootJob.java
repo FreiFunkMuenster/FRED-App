@@ -6,7 +6,7 @@ import android.app.job.JobService;
 import android.content.Intent;
 import android.util.Log;
 
-public class BootJob extends JobService {
+public class BootJob extends JobService {  // todo: rename class
     private static final String TAG = "Fred LocationService";
 
     @Override

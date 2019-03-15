@@ -44,6 +44,7 @@ import java.util.List;
 
 import de.florian_adelt.fred.database.DatabaseHelper;
 import de.florian_adelt.fred.helper.FredHelper;
+import de.florian_adelt.fred.helper.Logger;
 import de.florian_adelt.fred.helper.NetworkListActivity;
 import de.florian_adelt.fred.helper.Notification;
 import de.florian_adelt.fred.service.LocationService;
@@ -198,32 +199,11 @@ public class MapActivity extends AppCompatActivity {
             stopService(new Intent(this, SynchronizationService.class));
         }
         ServiceStarter.startSynchronizationService(getApplicationContext());
-        ServiceStarter.startLocationService(getApplicationContext(), 0);  // Start first location Service immediately
+        ServiceStarter.startLocationService(getApplicationContext(), 1000);  // Start first location Service immediately
 
 
         updateStatus(new Intent(), new DatabaseHelper(getApplicationContext()).getLastScanResult());
 
-
-        /*lm.requestLocationUpdates(
-                LocationManager.GPS_PROVIDER,
-                Long.parseLong(preferences.getString("scan_frequency_time", "20")) * 1000,  // todo: evaluate best value
-                .1f,
-                locationListener
-        );*/
-
-
-
-
-        /*BroadcastReceiver wifiReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-
-                unregisterReceiver(this);
-                wifiScanner.handleScanResult(context, intent);
-            }
-        };
-        wifiScanner = new Scanner((WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE), wifiReceiver, this, lm);*/
-        //wifiScanner.scan();
     }
 
     public void serviceToggled() {
@@ -237,10 +217,12 @@ public class MapActivity extends AppCompatActivity {
 
         stopService(new Intent(this, LocationService.class));
 
+
         if (preferences.getBoolean("service_enabled", true)) {
             enableLocationOverlay();
             Log.e("fred service", "start service");
             //startService(new Intent(this, LocationService.class));
+            ServiceStarter.setTimeToStop(getApplicationContext());
             ServiceStarter.startLocationService(this.getApplicationContext());
         }
         else {
@@ -312,7 +294,7 @@ public class MapActivity extends AppCompatActivity {
 
     public void updateStatus(Intent intent, ScanResult scanResult) {
 
-        Log.e("fred receiver", "received: ");
+        Log.e("fred receiver", "update status");
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean isGpsUpdate = intent.hasExtra("de.florian_adelt.fred.update.gps");
@@ -336,7 +318,7 @@ public class MapActivity extends AppCompatActivity {
         }
 
         if (scanResult == null) {
-            Log.e("fred receiver", "scan result was null");
+            Logger.log(getApplicationContext(), "fred receiver", "scan result was null");
             currentWifis.setText(getResources().getString(R.string.waiting_for_scan));
             return;
         }
@@ -453,7 +435,7 @@ public class MapActivity extends AppCompatActivity {
                 db.execSQL("delete from Scans where 1");
                 db.close();
 
-                Toast.makeText(MapActivity.this, "Netzwerke gelöscht.",
+                Toast.makeText(MapActivity.this, R.string.networks_deleted,
                         Toast.LENGTH_LONG).show();
                 return true;
             default:
@@ -491,6 +473,7 @@ public class MapActivity extends AppCompatActivity {
         if (hasPermissions()) {
             unregisterReceiver(updateReceiver);
             unregisterReceiver(snackbarReceiver);
+            unregisterReceiver(stopReceiver);
         }
     }
 

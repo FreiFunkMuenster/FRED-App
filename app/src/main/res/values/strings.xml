@@ -90,6 +90,35 @@
         <item>3</item>
     </string-array>
 
+
+    <string-array name="pref_scan_time_to_stop_titles">
+        <item>nie</item>
+        <item>nach 1 Minute</item>
+        <item>nach 15 Minuten</item>
+        <item>nach 30 Minuten</item>
+        <item>nach 1 Stunde</item>
+        <item>nach 2 Stunden</item>
+        <item>nach 4 Stunden</item>
+        <item>nach 8 Stunden</item>
+        <item>nach 12 Stunden</item>
+        <item>nach 16 Stunden</item>
+        <item>nach 24 Stunden</item>
+    </string-array>
+
+    <string-array name="pref_scan_time_to_stop_values">
+        <item>0</item>
+        <item>60</item>
+        <item>900</item>
+        <item>1800</item>
+        <item>3600</item>
+        <item>7200</item>
+        <item>14400</item>
+        <item>28800</item>
+        <item>43200</item>
+        <item>57600</item>
+        <item>86400</item>
+    </string-array>
+
     <!-- Example settings for Notifications -->
     <string name="pref_header_notifications">Netzwerkscan</string>
 
@@ -139,6 +168,12 @@
     <string name="touch_to_stop">Tippen zum beenden</string>
     <string name="please_enable_wifi">Tippen zum Beenden</string>
     <string name="app_is_inactive_no_wifi">FRED App benötigt WLAN</string>
+    <string name="latitude">Breitengrad</string>
+    <string name="longitude">Längengrad</string>
+    <string name="networks_deleted">Netzwerke gelöscht.</string>
+    <string name="pref_title_scan_time_to_stop">Dienst automatisch beenden</string>
+    <string name="app_auto_disabled">FRED - Zeit abgelaufen</string>
+    <string name="open_app_to_restart">Der Dienst wurde deaktiviert</string>
 
 
 </resources>

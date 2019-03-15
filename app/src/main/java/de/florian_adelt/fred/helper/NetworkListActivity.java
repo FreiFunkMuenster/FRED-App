@@ -96,6 +96,19 @@ public class NetworkListActivity extends AppCompatActivity {
                 sdf.setTimeZone(TimeZone.getDefault());
                 final String formattedDate = sdf.format(date) + " Uhr";
 
+                double latitude = cursor.getDouble(cursor.getColumnIndex("latitude"));
+                double longitude = cursor.getDouble(cursor.getColumnIndex("longitude"));
+
+                final StringBuilder subtitle = new StringBuilder(formattedDate);
+                subtitle.append('\n');
+                subtitle.append(getResources().getString(R.string.latitude));
+                subtitle.append(": ");
+                subtitle.append(latitude);
+                subtitle.append('\n');
+                subtitle.append(getResources().getString(R.string.longitude));
+                subtitle.append(": ");
+                subtitle.append(longitude);
+
                 this.wifis.add(new SimpleListable() {
                     @Override
                     public String getTitle() {
@@ -104,7 +117,7 @@ public class NetworkListActivity extends AppCompatActivity {
 
                     @Override
                     public String getSubtitle() {
-                        return formattedDate;
+                        return subtitle.toString();
                     }
 
                     @Override
@@ -116,16 +129,9 @@ public class NetworkListActivity extends AppCompatActivity {
                 if (this.wifis.size() >= 500) {
                     break;  // only get a limited amount to save performance
                 }
-                /*
-                JSONArray array = new JSONArray(cursor.getString(cursor.getColumnIndex("result")));
-                for (int i=0; i<array.length(); i++) {
-
-                    JSONObject json = array.getJSONObject(i);
-
-                    Wifi wifi = new Wifi(json.getString("ssid"), json.getInt("level"));
-                }*/
             } catch (Exception e) {
                 e.printStackTrace();
+                Logger.e(getApplicationContext(), "Fred network list", e);
             }
 
         }

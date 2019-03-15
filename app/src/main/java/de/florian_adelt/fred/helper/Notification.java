@@ -17,6 +17,7 @@ public class Notification {
     public static int NO_GPS_ID     = 1;
     public static int ACTIVE_ID     = 2;
     public static int NO_WIFI_ID    = 3;
+    public static int AUTO_DISABLED = 4;
 
 
     public static void cancel(NotificationManager notificationManager, int id) {
@@ -126,6 +127,30 @@ public class Notification {
         }
 
     }
+    public static void autoDisabledNotification(Context context) {
+        Log.e("Fred notification", "try to add auto-diabled notification");
+        NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (notificationManager != null) {
+
+            if (!isActive(notificationManager, AUTO_DISABLED)) {
+                Log.e("Fred notification", "adding auto disabled notification");
+
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "1")
+                        .setSmallIcon(R.drawable.ic_no_gps)
+                        .setContentTitle(context.getString(R.string.app_auto_disabled))
+                        .setContentText(context.getString(R.string.open_app_to_restart))
+                        .setPriority(NotificationCompat.PRIORITY_MIN)
+                        .setOngoing(true);
+
+                notificationManager.notify(AUTO_DISABLED, builder.build());
+
+            }
+
+
+        }
+
+    }
 
     public static boolean isActive(NotificationManager notificationManager, int id) {
 
@@ -135,6 +160,12 @@ public class Notification {
             }
         }
         return false;
+    }
+
+    public static void cancelAll(Context context) {
+        cancel(context, NO_WIFI_ID);
+        cancel(context, NO_GPS_ID);
+        cancel(context, ACTIVE_ID);
     }
 
 }

@@ -25,6 +25,7 @@ import java.util.List;
 
 import de.florian_adelt.fred.R;
 import de.florian_adelt.fred.database.DatabaseHelper;
+import de.florian_adelt.fred.helper.Logger;
 
 public class SynchronizationTask extends NetworkTask {
 
@@ -61,7 +62,7 @@ public class SynchronizationTask extends NetworkTask {
                     "{\"device-make\":\"" + Build.MANUFACTURER + "\", \"device-model\": \"" + Build.MODEL + "\"}");
 
             if (response == null) {
-                Log.e("fred sync", "create user returned null");
+                Logger.log(context, "fred sync", "create user returned null");
                 showToast(R.string.error_000);
                 return "";
             }

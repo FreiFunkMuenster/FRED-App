@@ -18,6 +18,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 
 import de.florian_adelt.fred.R;
+import de.florian_adelt.fred.helper.Logger;
 
 public abstract class NetworkTask extends AsyncTask<String, String, String> {
 
@@ -58,12 +59,13 @@ public abstract class NetworkTask extends AsyncTask<String, String, String> {
                 }
             }
             is.close();
-            Log.e("Fred Sync", builder.toString());
+            Logger.log(context, "Fred Sync Response", builder.toString());
 
             return new Response(urlConnection.getResponseCode(), builder.toString());
 
         } catch (Exception e) {
             Log.e("Fed Sync", e.getMessage());
+            Logger.e(context, "fred sync", e);
         }
 
         return null;

@@ -40,6 +40,11 @@ public abstract class SubSettingsActivity extends AppCompatActivity {
             } else {
                 preference.setSummary(stringValue);
             }
+
+            if ("scan_time_to_stop".equals(preference.getKey()) && !stringValue.equals(((ListPreference) preference).getValue())) {
+                ServiceStarter.setTimeToStop(preference.getContext(), Long.parseLong(stringValue));
+            }
+
             return true;
         }
     };
@@ -89,6 +94,15 @@ public abstract class SubSettingsActivity extends AppCompatActivity {
         }
         catch (Exception e) {
             e.printStackTrace();
+            try {
+                sBindPreferenceSummaryToValueListener.onPreferenceChange(preference,
+                        PreferenceManager
+                                .getDefaultSharedPreferences(preference.getContext())
+                                .getInt(preference.getKey(), 0));
+            }
+            catch (Exception e2) {
+                e2.printStackTrace();
+            }
         }
     }
 
@@ -147,7 +161,7 @@ public abstract class SubSettingsActivity extends AppCompatActivity {
                 networksButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        Log.e("Fred Upload", "Button Press");
+                        Log.e("Fred target ssid", "Button Press");
                        startActivity(new Intent(getActivity(), TargetNetworksActivity.class));
                         return true;
                     }

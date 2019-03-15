@@ -7,6 +7,7 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationListener;
@@ -18,9 +19,11 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.ToggleButton;
 
 import de.florian_adelt.fred.MapActivity;
 import de.florian_adelt.fred.R;
+import de.florian_adelt.fred.helper.Logger;
 import de.florian_adelt.fred.helper.Notification;
 import de.florian_adelt.fred.wifi.Scanner;
 
@@ -33,6 +36,8 @@ public class LocationService extends Service {
     private Scanner wifiScanner;
 
     private int serviceId;
+
+    private BroadcastReceiver stopReceiver;
 
     private LocationManager locationManager;
     private final LocationListener locationListener = new LocationListener() {
@@ -50,17 +55,20 @@ public class LocationService extends Service {
 
         @Override
         public void onStatusChanged(String s, int i, Bundle bundle) {
+            Log.e("fred location change", "fred location status change: " + s);
 
         }
 
         @Override
         public void onProviderEnabled(String s) {
+            Log.e("fred location change", "fred location provider enabled: " + s);
 
         }
 
         @Override
         public void onProviderDisabled(String s) {
-
+            Log.e("fred location change", "fred location provider disabled: " + s);
+            killAndRestart();
         }
     };
 
@@ -72,94 +80,71 @@ public class LocationService extends Service {
 
 
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId)
-    {
+    public int onStartCommand(Intent intent, int flags, int startId) {
         Log.e(TAG, "onStartCommand");
         super.onStartCommand(intent, flags, startId);
         this.serviceId = startId;
 
-        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            Log.e(TAG, "GPS is disabled");
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if (!preferences.getBoolean("service_enabled", true)) {
+            Log.e(TAG, "Service started but is disabled. Probably was scheduled before disabling. Skip...");
+            stopSelf(serviceId);
+        } else {
+            if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+                Log.e(TAG, "GPS is disabled");
 
 
-            Intent notificationIntent = new Intent(getApplicationContext(), MapActivity.class);
-            PendingIntent activeNotification = PendingIntent.getActivity(getApplicationContext(), Notification.NO_GPS_ID, notificationIntent, PendingIntent.FLAG_NO_CREATE);
+                Intent notificationIntent = new Intent(getApplicationContext(), MapActivity.class);
+                PendingIntent activeNotification = PendingIntent.getActivity(getApplicationContext(), Notification.NO_GPS_ID, notificationIntent, PendingIntent.FLAG_NO_CREATE);
 
-            NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-            Notification.createServiceNotification(
-                    getApplicationContext(),
-                    notificationManager,
-                    Notification.NO_GPS_ID,
-                    getString(R.string.app_is_inactive),
-                    getString(R.string.please_activate_gps),
-                    getString(R.string.please_activate_gps_long),
-                    R.drawable.ic_no_gps
-            );
-
-            if (notificationManager != null) {
-                notificationManager.cancel(Notification.ACTIVE_ID);
-            }
-
-            if (activeNotification == null) {
-
-                /*Intent myIntent = new Intent(getApplicationContext(), MapActivity.class);
-                myIntent.setAction("de.florian_adelt.fred.stop");
-                myIntent.putExtra("de.florian_adelt.fred.stop.notification_id", Notification.NO_GPS_ID);
-                PendingIntent stopServiceIntent =
-                        PendingIntent.getBroadcast(getApplicationContext(), 0, myIntent, 0);
-
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(this, "1")
-                        .setSmallIcon(R.drawable.ic_no_gps)
-                        .setContentTitle(getString(R.string.app_is_inactive))
-                        .setContentText(getString(R.string.please_activate_gps))
-                        .setStyle(new NotificationCompat.BigTextStyle()
-                                .bigText(getString(R.string.please_activate_gps_long)))
-                        .setPriority(NotificationCompat.PRIORITY_MIN)
-                        .setOngoing(true)
-                        .addAction(R.drawable.ic_no_gps, getString(R.string.stop_fred_service), stopServiceIntent);
-
-                if (notificationManager != null)
-                    notificationManager.notify(Notification.NO_GPS_ID, builder.build());
-                */
-
-            }
-
-
-            Intent i = new Intent("de.florian_adelt.fred.update");
-            Bundle extras = new Bundle();
-            extras.putBoolean("de.florian_adelt.fred.update.gps", false);
-            i.putExtras(extras);
-            getApplicationContext().sendBroadcast(i);
-
-            killAndRestart();
-        }
-        else {
-
-            WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-            if (wifiManager == null || !wifiManager.isWifiEnabled()) {
-                Notification.enableWifiNotification(getApplicationContext());
-            } else {
                 NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
                 Notification.createServiceNotification(
                         getApplicationContext(),
                         notificationManager,
-                        Notification.ACTIVE_ID,
-                        getString(R.string.app_is_active),
-                        getString(R.string.touch_to_stop),
-                        null,
-                        R.drawable.ic_gps
+                        Notification.NO_GPS_ID,
+                        getString(R.string.app_is_inactive),
+                        getString(R.string.please_activate_gps),
+                        getString(R.string.please_activate_gps_long),
+                        R.drawable.ic_no_gps
                 );
+
+                if (notificationManager != null) {
+                    notificationManager.cancel(Notification.ACTIVE_ID);
+                }
 
                 Intent i = new Intent("de.florian_adelt.fred.update");
                 Bundle extras = new Bundle();
-                extras.putBoolean("de.florian_adelt.fred.update.gps", true);
+                extras.putBoolean("de.florian_adelt.fred.update.gps", false);
                 i.putExtras(extras);
                 getApplicationContext().sendBroadcast(i);
+
+                killAndRestart();
+            } else {
+
+                WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+                if (wifiManager == null || !wifiManager.isWifiEnabled()) {
+                    Notification.enableWifiNotification(getApplicationContext());
+                } else {
+                    NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                    Notification.createServiceNotification(
+                            getApplicationContext(),
+                            notificationManager,
+                            Notification.ACTIVE_ID,
+                            getString(R.string.app_is_active),
+                            getString(R.string.touch_to_stop),
+                            null,
+                            R.drawable.ic_gps
+                    );
+
+                    Intent i = new Intent("de.florian_adelt.fred.update");
+                    Bundle extras = new Bundle();
+                    extras.putBoolean("de.florian_adelt.fred.update.gps", true);
+                    i.putExtras(extras);
+                    getApplicationContext().sendBroadcast(i);
+                }
             }
-
-
         }
         return START_STICKY;
     }
@@ -171,7 +156,25 @@ public class LocationService extends Service {
         initializeLocationManager();
         wifiScanner = new Scanner((WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE), this);
 
+
+        stopReceiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+
+                Log.e("fred stop receiver", "received in service");
+                stopService(new Intent(context, LocationService.class));
+                Notification.cancelAll(context);
+                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+                preferences.edit()
+                        .putBoolean("service_enabled", false)
+                        .apply();
+
+            }
+        };
+        registerReceiver(stopReceiver, new IntentFilter("de.florian_adelt.fred.stop"));
+
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            Logger.log(getApplicationContext(), "fred location service", "GPS Provider is disabled, don't start service");
             return;
         }
 
@@ -186,8 +189,10 @@ public class LocationService extends Service {
                     locationListener);
         } catch (java.lang.SecurityException ex) {
             Log.e(TAG, "fail to request location update, ignore", ex);
+            Logger.e(getApplicationContext(), "fred location service", ex);
         } catch (IllegalArgumentException ex) {
             Log.e(TAG, "gps provider does not exist " + ex.getMessage());
+            Logger.e(getApplicationContext(), "fred location service", ex);
         }
 
     }
@@ -205,6 +210,11 @@ public class LocationService extends Service {
             }
         }
         wifiScanner.dispose();
+        unregisterReceiver(stopReceiver);
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        if (!preferences.getBoolean("service_enabled", true)) {
+            Notification.cancelAll(getApplicationContext());
+        }
     }
 
     private void initializeLocationManager() {
@@ -218,7 +228,6 @@ public class LocationService extends Service {
         stopSelf(serviceId);
         ServiceStarter.startLocationService(getApplicationContext());
     }
-
 
     public void removeUpdates() {
         locationManager.removeUpdates(locationListener);

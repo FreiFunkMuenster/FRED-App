@@ -35,7 +35,9 @@
                 android:layout_height="match_parent"
                 android:orientation="vertical"
                 android:paddingStart="12dp"
-                android:paddingEnd="12dp">
+                android:paddingTop="4dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="8dp">
 
                 <TextView
                     android:id="@+id/statistic_unsynced_scans"
