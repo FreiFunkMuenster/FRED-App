@@ -17,6 +17,7 @@ import java.util.List;
 import de.florian_adelt.fred.R;
 import de.florian_adelt.fred.database.DatabaseHelper;
 import de.florian_adelt.fred.helper.Logger;
+import de.florian_adelt.fred.helper.Status;
 import de.florian_adelt.fred.wifi.ScanResult;
 
 public class SynchronizationService extends JobService {

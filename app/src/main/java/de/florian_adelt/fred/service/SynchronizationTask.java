@@ -26,6 +26,7 @@ import java.util.List;
 import de.florian_adelt.fred.R;
 import de.florian_adelt.fred.database.DatabaseHelper;
 import de.florian_adelt.fred.helper.Logger;
+import de.florian_adelt.fred.helper.Status;
 
 public class SynchronizationTask extends NetworkTask {
 
@@ -54,6 +55,7 @@ public class SynchronizationTask extends NetworkTask {
         String data = params[3]; //data to post
         String userHash = preferences.getString("user_hash", "");
         String userId = preferences.getString("user_id", "");
+        de.florian_adelt.fred.helper.Status.broadcastStatus(context, R.string.starting_synchronization);
 
         if ("".equals(userHash) || "".equals(userId)) {
             Response response = request(
@@ -64,6 +66,7 @@ public class SynchronizationTask extends NetworkTask {
             if (response == null) {
                 Logger.log(context, "fred sync", "create user returned null");
                 showToast(R.string.error_000);
+                de.florian_adelt.fred.helper.Status.broadcastStatus(context, R.string.error_000);
                 return "";
             }
 
@@ -87,9 +90,11 @@ public class SynchronizationTask extends NetworkTask {
         if (response != null && response.getCode() >= 200 && response.getCode() < 300) {
             dbHelper.setSynced();
             showToast(R.string.scans_synced_successfully);
+            de.florian_adelt.fred.helper.Status.broadcastStatus(context, R.string.scans_synced_successfully);
         }
         else {
             showToast(R.string.error_001);
+            de.florian_adelt.fred.helper.Status.broadcastStatus(context, R.string.error_001);
         }
 
         return "";

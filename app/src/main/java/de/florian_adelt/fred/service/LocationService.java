@@ -25,6 +25,7 @@ import de.florian_adelt.fred.MapActivity;
 import de.florian_adelt.fred.R;
 import de.florian_adelt.fred.helper.Logger;
 import de.florian_adelt.fred.helper.Notification;
+import de.florian_adelt.fred.helper.Status;
 import de.florian_adelt.fred.wifi.Scanner;
 
 public class LocationService extends Service {
@@ -113,11 +114,7 @@ public class LocationService extends Service {
                     notificationManager.cancel(Notification.ACTIVE_ID);
                 }
 
-                Intent i = new Intent("de.florian_adelt.fred.update");
-                Bundle extras = new Bundle();
-                extras.putBoolean("de.florian_adelt.fred.update.gps", false);
-                i.putExtras(extras);
-                getApplicationContext().sendBroadcast(i);
+                Status.broadcastGpsDisablesStatus(getApplicationContext());
 
                 killAndRestart();
             } else {
@@ -138,11 +135,7 @@ public class LocationService extends Service {
                             R.drawable.ic_gps
                     );
 
-                    Intent i = new Intent("de.florian_adelt.fred.update");
-                    Bundle extras = new Bundle();
-                    extras.putBoolean("de.florian_adelt.fred.update.gps", true);
-                    i.putExtras(extras);
-                    getApplicationContext().sendBroadcast(i);
+                    Status.broadcastGpsEnablesStatus(getApplicationContext());
                 }
             }
         }

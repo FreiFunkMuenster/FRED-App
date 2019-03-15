@@ -37,6 +37,7 @@ import org.osmdroid.config.Configuration;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
+import org.osmdroid.views.overlay.Overlay;
 import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay;
 
 import java.util.ArrayList;
@@ -47,6 +48,7 @@ import de.florian_adelt.fred.helper.FredHelper;
 import de.florian_adelt.fred.helper.Logger;
 import de.florian_adelt.fred.helper.NetworkListActivity;
 import de.florian_adelt.fred.helper.Notification;
+import de.florian_adelt.fred.helper.Status;
 import de.florian_adelt.fred.service.LocationService;
 import de.florian_adelt.fred.service.ServiceStarter;
 import de.florian_adelt.fred.service.SynchronizationService;
@@ -115,13 +117,13 @@ public class MapActivity extends AppCompatActivity {
         map.setMultiTouchControls(true);
         map.setUseDataConnection(true);  // todo: can be interesting later on
         map.setClickable(true);
+        map.setBuiltInZoomControls(false);
 
 
         final IMapController mapController = map.getController();
         mapController.setZoom(20);
         GeoPoint startPoint = new GeoPoint(preferences.getFloat("last_latitude", 50.5f), preferences.getFloat("last_longitude", 10.05f));
         mapController.setCenter(startPoint);
-
 
 
 
@@ -202,7 +204,11 @@ public class MapActivity extends AppCompatActivity {
         ServiceStarter.startLocationService(getApplicationContext(), 1000);  // Start first location Service immediately
 
 
-        updateStatus(new Intent(), new DatabaseHelper(getApplicationContext()).getLastScanResult());
+
+        map.invalidate();
+        map.getController().setZoom(map.getZoomLevelDouble() + 0.001);
+
+        //updateStatus(new Intent(), new DatabaseHelper(getApplicationContext()).getLastScanResult());
 
     }
 
@@ -224,6 +230,7 @@ public class MapActivity extends AppCompatActivity {
             //startService(new Intent(this, LocationService.class));
             ServiceStarter.setTimeToStop(getApplicationContext());
             ServiceStarter.startLocationService(this.getApplicationContext());
+            Status.broadcastStatus(getApplicationContext(), R.string.waiting_for_scan);
         }
         else {
 
@@ -295,109 +302,14 @@ public class MapActivity extends AppCompatActivity {
     public void updateStatus(Intent intent, ScanResult scanResult) {
 
         Log.e("fred receiver", "update status");
-
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean isGpsUpdate = intent.hasExtra("de.florian_adelt.fred.update.gps");
-
-        if (isGpsUpdate) {
-            if (intent.getBooleanExtra("de.florian_adelt.fred.update.gps", false)) {
-
-                if (currentWifis.getText().equals(getResources().getString(R.string.gps_disabled))) {
-                    // GPS was switched to enabled since last scan
-                    currentWifis.setText(getResources().getString(R.string.gps_enabled));
-                }
-                else {
-                    currentWifis.setText(Html.fromHtml(preferences.getString("cached_last_scan_result", getResources().getString(R.string.waiting_for_scan))));
-                }
-            }
-            else {
-                currentWifis.setText(getResources().getString(R.string.gps_disabled));
-            }
-
+        if (currentWifis == null) {
+            Logger.log(getApplicationContext(), "update status", "status bar was not initialized, ignoring update: " + intent.getStringExtra("de.florian_adelt.fred.update.status"));
             return;
         }
 
-        if (scanResult == null) {
-            Logger.log(getApplicationContext(), "fred receiver", "scan result was null");
-            currentWifis.setText(getResources().getString(R.string.waiting_for_scan));
-            return;
-        }
-
-        List<Wifi> wifis = scanResult.getSortedWifiList();
-
-        if (wifis.size() == 0) {
-            currentWifis.setText(getResources().getString(R.string.last_scan_resulted_empty));
-            return;
-        }
-
-        int max = 3;
-        int last = wifis.size() > max ? max : wifis.size();
-
-        List<Wifi> targetWifis = new ArrayList<>();
-        List<Wifi> otherWifis = new ArrayList<>();
-
-        FredHelper helper = new FredHelper(getApplicationContext());
-
-        StringBuilder builder = new StringBuilder();
-
-        for (int i=0; i<last; i++) {
-            boolean isShownSsid = false;
-            for (Wifi w : targetWifis) {
-                if (wifis.get(i).getSsid().equals(w.getSsid())) {
-                    isShownSsid = true;
-                    break;
-                }
-            }
-            if (isShownSsid) {
-                continue;
-            }
-            if (helper.isTargetSsid(wifis.get(i).getSsid()))
-                targetWifis.add(wifis.get(i));
-            else
-                otherWifis.add(wifis.get(i));
-        }
-
-        for (int i=0; i<targetWifis.size() && i<max; i++) {
-            builder.append(wifiText(targetWifis.get(i), helper));
-            if (i != targetWifis.size() - 1)
-                builder.append(", ");
-        }
-        max = max - targetWifis.size();
-        for (int i=0; i<otherWifis.size() && i<max; i++) {
-            builder.append(wifiText(otherWifis.get(i), helper));
-            if (i != max - 1)
-                builder.append(", ");
-        }
-
-        if (wifis.size() > 3) {
-            builder.append(" ");
-            builder.append(getResources().getString(R.string.and_x_other, wifis.size() - 3));
-        }
-        String result = builder.toString();
-        currentWifis.setText(Html.fromHtml(result));
-        preferences.edit()
-                .putString("cached_last_scan_result", result)
-                .apply();
+        currentWifis.setText(Html.fromHtml(intent.getStringExtra("de.florian_adelt.fred.update.status")));
     }
 
-    protected String wifiText(Wifi wifi, FredHelper helper) {
-        StringBuilder builder = new StringBuilder();
-        String ssid = wifi.getSsid();
-        if ("".equals(ssid))
-            ssid = getResources().getString(R.string.ssid_unknown);
-        if (helper.isTargetSsid(ssid)) {
-            builder.append("<strong>");
-            builder.append(ssid);
-            builder.append("</strong>");
-        }
-        else {
-            builder.append(ssid);
-        }
-        builder.append(" (");
-        builder.append(wifi.getLevel());
-        builder.append("db)");
-        return builder.toString();
-    }
 
 
 
@@ -451,11 +363,15 @@ public class MapActivity extends AppCompatActivity {
         //if you make changes to the configuration, use
         //SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
         //Configuration.getInstance().load(this, PreferenceManager.getDefaultSharedPreferences(this));
-        if (map != null)
+        if (map != null) {
             map.onResume(); //needed for compass, my location overlays, v6.0.0 and up
+        }
 
         if (hasPermissions())
             registerUpdateReceiver();
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        Status.broadcastStatus(getApplicationContext(), preferences.getString("last_status_update", getString(R.string.initializing_scan)));
     }
 
     @Override

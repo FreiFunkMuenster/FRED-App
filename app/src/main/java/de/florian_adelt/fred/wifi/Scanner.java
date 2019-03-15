@@ -33,6 +33,7 @@ import de.florian_adelt.fred.R;
 import de.florian_adelt.fred.database.DatabaseHelper;
 import de.florian_adelt.fred.helper.Logger;
 import de.florian_adelt.fred.helper.Notification;
+import de.florian_adelt.fred.helper.Status;
 import de.florian_adelt.fred.service.LocationService;
 import de.florian_adelt.fred.service.SynchronizationTask;
 
@@ -67,6 +68,8 @@ public class Scanner {
     }
 
     public void scan(Location location) {
+
+
         if (isScanning) {
             Logger.log(context, "fred scanner", "scanning already in progress");
             return;
@@ -74,6 +77,7 @@ public class Scanner {
         if (location == null) {
             Logger.log(context, "fred scanner", "Tried to scan with null location, restarting");
             service.killAndRestart();
+            Status.broadcastStatus(context, R.string.initializing_scan);
             return;
         }
 
@@ -81,6 +85,7 @@ public class Scanner {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
         float lastLatitude = preferences.getFloat("last_latitude", 0);
         float lastLongitude = preferences.getFloat("last_longitude", 0);
+
 
         this.location = location;
 
@@ -97,9 +102,11 @@ public class Scanner {
             service.killAndRestart();
             Intent i = new Intent("de.florian_adelt.fred.snackbar");
             Bundle extras = new Bundle();
-            extras.putString("de.florian_adelt.fred.snackbar.message", context.getString(R.string.travelled_distance_not_far_enough));
+            extras.putString("de.florian_adelt.fred.snackbar.message", context.getString(R.string.travelled_distance_not_far_enough, (int) distance, preferences.getInt("scan_frequency_distance", 10)));
             i.putExtras(extras);
             context.sendBroadcast(i);
+
+            Status.broadcastStatus(context, context.getString(R.string.travelled_distance_not_far_enough, (int) distance, preferences.getInt("scan_frequency_distance", 10)));
             return;
         }
 
@@ -111,6 +118,8 @@ public class Scanner {
             extras.putString("de.florian_adelt.fred.snackbar.message", context.getString(R.string.insufficent_accuracy, (int) location.getAccuracy()));
             i.putExtras(extras);
             context.sendBroadcast(i);
+
+            Status.broadcastStatus(context,  context.getString(R.string.insufficent_accuracy, (int) location.getAccuracy()));
             return;
         }
 
@@ -118,6 +127,7 @@ public class Scanner {
         if (!wifiManager.isWifiEnabled()) {
             //wifiManager.setWifiEnabled(true);
             Notification.enableWifiNotification(context);
+            Status.broadcastStatus(context, R.string.app_is_inactive_no_wifi);
         }
         else {
             Notification.cancel(context, Notification.NO_WIFI_ID);
@@ -196,13 +206,14 @@ public class Scanner {
                     "success",
                     scanResults);
 
-            String json = gson.toJson(scanResult);
-            Intent i = new Intent("de.florian_adelt.fred.update");
-            Bundle extras = new Bundle();
-            extras.putString("de.florian_adelt.fred.update.scan", json);
-            i.putExtras(extras);
-            context.sendBroadcast(i);
-            Log.e("fred broadcast", "broadcasting");
+            //String json = gson.toJson(scanResult);
+            //Intent i = new Intent("de.florian_adelt.fred.update");
+            //Bundle extras = new Bundle();
+            //extras.putString("de.florian_adelt.fred.update.scan", json);
+            //i.putExtras(extras);
+            //context.sendBroadcast(i);
+            //Log.e("fred broadcast", "broadcasting");
+            Status.broadcastScanResultStatus(context, scanResult);
 
         }
         catch (Exception e) {

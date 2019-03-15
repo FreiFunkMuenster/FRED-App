@@ -108,7 +108,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 false,
                 "Scans",
                 columns,
-                "synced_at IS NULL",
+                "synced_at IS NULL AND result != \"[]\"",
                 null,
                 null,
                 null,
