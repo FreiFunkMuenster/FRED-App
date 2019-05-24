@@ -15,7 +15,7 @@ public class Logger {
     public static void log(Context context, String tag, String message, int level) {
 
         DatabaseHelper helper = new DatabaseHelper(context);
-        //helper.log(message, level, tag);  // todo: crashes on Android 9 device with: table Logs has no column named tag
+        helper.log(message, level, tag);  // todo: crashes on Android 9 device with: table Logs has no column named tag
         Log.e("fred_" + tag, message);
 
     }
