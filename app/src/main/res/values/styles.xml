@@ -18,4 +18,7 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
+    <style name="RecordSwitch" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="android:colorControlActivated">@color/lightBlue</item>
+    </style>
 </resources>

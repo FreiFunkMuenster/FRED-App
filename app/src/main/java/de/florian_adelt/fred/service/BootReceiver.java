@@ -20,8 +20,8 @@ import de.florian_adelt.fred.helper.Logger;
 public class BootReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
-        Logger.log(context, "fred boot", "fred boot event received");
-        Log.e("fred boot", intent.getAction());
+        Logger.log(context, "boot", "fred boot event received");
+        //Log.e("fred boot", intent.getAction());
 
         ServiceStarter.startLocationService(context);
         ServiceStarter.startSynchronizationService(context);

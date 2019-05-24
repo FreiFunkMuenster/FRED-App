@@ -26,6 +26,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -34,7 +35,11 @@ import com.google.gson.Gson;
 
 import org.osmdroid.api.IMapController;
 import org.osmdroid.config.Configuration;
+import org.osmdroid.tileprovider.MapTileCache;
+import org.osmdroid.tileprovider.cachemanager.CacheManager;
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory;
+import org.osmdroid.tileprovider.tilesource.XYTileSource;
+import org.osmdroid.util.BoundingBox;
 import org.osmdroid.util.GeoPoint;
 import org.osmdroid.views.MapView;
 import org.osmdroid.views.overlay.Overlay;
@@ -113,32 +118,43 @@ public class MapActivity extends AppCompatActivity {
 
 
         map = (MapView) findViewById(R.id.map);
-        map.setTileSource(TileSourceFactory.MAPNIK);
+        String tileServer = preferences.getString("tile_server_url", "https://maps.wikimedia.org/osm-intl") + "/";
+        Logger.log(getApplicationContext(), "osm", "Using tile server: " + tileServer);
+        map.setTileSource(new XYTileSource("FREDSRC", 1, 19, 256, ".png", new String[] {
+                tileServer
+        }));
         map.setMultiTouchControls(true);
         map.setUseDataConnection(true);  // todo: can be interesting later on
         map.setClickable(true);
         map.setBuiltInZoomControls(false);
+        map.setDrawingCacheEnabled(true);
 
+        MapTileCache tileCache = map.getTileProvider().createTileCache();
+        boolean hasCacheSize = tileCache.ensureCapacity(24 * 1024 * 1024);
+        if (hasCacheSize) {
+            Log.i("fred cache", "cache size ensured");
+        }
+        else {
+            Log.e("fred cache", "could not ensure cache size");
+        }
+
+        /*
+        CacheManager cacheManager = new CacheManager(map);
+        BoundingBox cacheBox = new BoundingBox(55, 5, 46, 16);
+        CacheManager.CacheManagerTask downloadTask = cacheManager.downloadAreaAsync(this, cacheBox, 18, 22);
+        try {
+            cacheManager.execute(downloadTask);
+        }
+        catch (Exception e) {
+            Logger.e(getApplicationContext(), "fred cache", e);
+        }
+        */
 
         final IMapController mapController = map.getController();
-        mapController.setZoom(20);
+        mapController.setZoom(19);
         GeoPoint startPoint = new GeoPoint(preferences.getFloat("last_latitude", 50.5f), preferences.getFloat("last_longitude", 10.05f));
         mapController.setCenter(startPoint);
 
-
-
-        /*LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        Location location = lm.getLastKnownLocation(LocationManager.GPS_PROVIDER);
-        if (location != null)
-        {
-            this.location = location;
-            Log.w("fred lat", location.getLatitude() + " fred");
-            Log.w("lng", location.getLongitude() + "");
-        }
-        else
-        {
-            Log.e("Location fred", "Location null");
-        }*/
 
         String targetSSIDs = preferences.getString("target_ssids", null);
         if (targetSSIDs == null) {
@@ -149,21 +165,21 @@ public class MapActivity extends AppCompatActivity {
         currentWifis = findViewById(R.id.current_wifis);
 
         boolean isEnabled = preferences.getBoolean("service_enabled", true);
-        final ToggleButton toggleButton = findViewById(R.id.toggleButton);
+        final Switch recordSwitch = findViewById(R.id.recordSwitch);
 
-        toggleButton.setChecked(isEnabled);
+        recordSwitch.setChecked(isEnabled);
         serviceToggled();
 
         if (isEnabled) {
-            Log.e("fred start", "service enabled");
+            Log.i("fred start", "service enabled");
             enableLocationOverlay();
         }
         else {
-            Log.e("fred start", "service disabled");
+            Log.i("fred start", "service disabled");
             disableLocationOverlay();
         }
 
-        toggleButton.setOnClickListener(new View.OnClickListener() {
+        recordSwitch.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 serviceToggled();
@@ -173,7 +189,7 @@ public class MapActivity extends AppCompatActivity {
         findViewById(R.id.follow_fab).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                locationOverlay.enableFollowLocation();
+                enableLocationOverlay();
             }
         });
 
@@ -213,12 +229,12 @@ public class MapActivity extends AppCompatActivity {
     }
 
     public void serviceToggled() {
-        ToggleButton toggleButton = findViewById(R.id.toggleButton);
+        Switch recordSwitch = findViewById(R.id.recordSwitch);
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         SharedPreferences.Editor editor = preferences.edit();
 
-        editor.putBoolean("service_enabled", toggleButton.isChecked());
+        editor.putBoolean("service_enabled", recordSwitch.isChecked());
         editor.apply();
 
         stopService(new Intent(this, LocationService.class));
@@ -226,7 +242,7 @@ public class MapActivity extends AppCompatActivity {
 
         if (preferences.getBoolean("service_enabled", true)) {
             enableLocationOverlay();
-            Log.e("fred service", "start service");
+            Log.i("fred service", "start service");
             //startService(new Intent(this, LocationService.class));
             ServiceStarter.setTimeToStop(getApplicationContext());
             ServiceStarter.startLocationService(this.getApplicationContext());
@@ -241,6 +257,7 @@ public class MapActivity extends AppCompatActivity {
 
             disableLocationOverlay();
         }
+
 
     }
 
@@ -263,7 +280,7 @@ public class MapActivity extends AppCompatActivity {
             @Override
             public void onReceive(Context context, Intent intent) {
 
-                Log.e("fred snackbar", "showing snackbar");
+                Log.i("fred snackbar", "showing snackbar");
 
                 //int messageId = intent.getIntExtra("de.florian_adelt.fred.snackbar.message_id", 0);
                 //if (messageId == 0) {
@@ -279,7 +296,7 @@ public class MapActivity extends AppCompatActivity {
             @Override
             public void onReceive(Context context, Intent intent) {
 
-                Log.e("fred stop receiver", "received");
+                Log.i("fred stop receiver", "received");
 
                 int notificationId = intent.getIntExtra("de.florian_adelt.fred.stop.notification_id", -1);
                 int[] toCancel = { Notification.NO_GPS_ID, Notification.ACTIVE_ID, Notification.NO_WIFI_ID };
@@ -287,8 +304,8 @@ public class MapActivity extends AppCompatActivity {
                     Notification.cancel((NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE), id);
                 }
 
-                ToggleButton toggleButton = findViewById(R.id.toggleButton);
-                toggleButton.setChecked(false);
+                Switch recordSwitch = findViewById(R.id.recordSwitch);
+                recordSwitch.setChecked(false);
                 serviceToggled();
 
 
@@ -301,9 +318,9 @@ public class MapActivity extends AppCompatActivity {
 
     public void updateStatus(Intent intent, ScanResult scanResult) {
 
-        Log.e("fred receiver", "update status");
+        Log.i("fred receiver", "update status: " + intent.getStringExtra("de.florian_adelt.fred.update.status"));
         if (currentWifis == null) {
-            Logger.log(getApplicationContext(), "update status", "status bar was not initialized, ignoring update: " + intent.getStringExtra("de.florian_adelt.fred.update.status"));
+            Logger.log(getApplicationContext(), "update_status", "status bar was not initialized, ignoring update: " + intent.getStringExtra("de.florian_adelt.fred.update.status"));
             return;
         }
 

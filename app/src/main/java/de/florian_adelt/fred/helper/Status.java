@@ -35,7 +35,7 @@ public class Status {
     public static void broadcastScanResultStatus(Context context, ScanResult scanResult) {
 
         if (scanResult == null) {
-            Logger.log(context, "fred status", "scan result was null");
+            Logger.log(context, "status", "scan result was null");
             broadcastStatus(context, R.string.waiting_for_scan);
             return;
         }

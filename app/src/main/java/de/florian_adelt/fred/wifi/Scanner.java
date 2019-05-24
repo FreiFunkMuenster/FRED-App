@@ -71,11 +71,11 @@ public class Scanner {
 
 
         if (isScanning) {
-            Logger.log(context, "fred scanner", "scanning already in progress");
+            Logger.log(context, "scanner", "scanning already in progress");
             return;
         }
         if (location == null) {
-            Logger.log(context, "fred scanner", "Tried to scan with null location, restarting");
+            Logger.log(context, "scanner", "Tried to scan with null location, restarting");
             service.killAndRestart();
             Status.broadcastStatus(context, R.string.initializing_scan);
             return;
@@ -89,16 +89,16 @@ public class Scanner {
 
         this.location = location;
 
-        Logger.log(context, "fred scanner", "set location to: " + location.getLatitude() + ", " + location.getLongitude());
+        Logger.log(context, "scanner", "set location to: " + location.getLatitude() + ", " + location.getLongitude());
 
 
         float distance = distFrom(lastLatitude, lastLongitude, (float) location.getLatitude(), (float) location.getLongitude());
 
 
-        Log.e("Fred Scanner", "Travelled Distance: " + distance);
+        Log.w("Fred Scanner", "Travelled Distance: " + distance);
 
         if (distance < preferences.getInt("scan_frequency_distance", 10)) {
-            Logger.log(context, "Fred Scanner", "Travelled Distance was not enough: " + distance + "/" + preferences.getInt("scan_frequency_distance", 10));
+            Logger.log(context, "Scanner", "Travelled Distance was not enough: " + distance + "/" + preferences.getInt("scan_frequency_distance", 10));
             service.killAndRestart();
             Intent i = new Intent("de.florian_adelt.fred.snackbar");
             Bundle extras = new Bundle();
@@ -111,7 +111,7 @@ public class Scanner {
         }
 
         if (location.getAccuracy() > preferences.getInt("scan_frequency_accuracy", 15)) {
-            Logger.log(context, "Fred Scanner", "Accuracy was insufficient: " + location.getAccuracy());
+            Logger.log(context, "Scanner", "Accuracy was insufficient: " + location.getAccuracy());
             service.killAndRestart();
             Intent i = new Intent("de.florian_adelt.fred.snackbar");
             Bundle extras = new Bundle();
@@ -143,13 +143,14 @@ public class Scanner {
 
         isScanning = false;
 
-        Logger.log(context, "fred scanner", "scanning didn't start");
-        Toast.makeText(context, "Wifi Scan nicht möglich", Toast.LENGTH_SHORT).show();
+        Logger.log(context, "scanner", "scanning didn't start");
+        service.killAndRestart();
+        //Toast.makeText(context, "Wifi Scan nicht möglich", Toast.LENGTH_SHORT).show();
     }
 
     public void handleScanResult(Context context, Intent intent) {
         if (this.location == null) {
-            Logger.log(context, "fred scanner", "Tried to handle scan results with null location");
+            Logger.log(context, "scanner", "Tried to handle scan results with null location");
             return;
         }
         Log.e("fred scanner", "scan results");
@@ -218,7 +219,7 @@ public class Scanner {
         }
         catch (Exception e) {
             e.printStackTrace();
-            Logger.e(context, "fred scanner", e);
+            Logger.e(context, "scanner", e);
         }
         finally {
             db.close();

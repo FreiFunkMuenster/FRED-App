@@ -140,7 +140,7 @@ public class TargetNetworksActivity extends AppCompatActivity {
     }
 
     public void addSsid(String ssid) {
-        Log.e("fred ssid", "adding " + ssid);
+        Log.i("fred ssid", "adding " + ssid);
         if ("".equals(ssid)) {
             return;
         }
@@ -153,7 +153,7 @@ public class TargetNetworksActivity extends AppCompatActivity {
     }
 
     public void removeSsid(String ssid) {
-        Log.e("fred ssid", "removing " + ssid);
+        Log.i("fred ssid", "removing " + ssid);
         List<String> loadedSsids = loadSsids();
         List<String> newSsids = new ArrayList<>();
 

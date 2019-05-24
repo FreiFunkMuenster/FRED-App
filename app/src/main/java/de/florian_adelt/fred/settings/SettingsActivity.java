@@ -1,7 +1,9 @@
 package de.florian_adelt.fred.settings;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
@@ -11,6 +13,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import de.florian_adelt.fred.R;
+import de.florian_adelt.fred.helper.Logger;
 
 public class SettingsActivity extends AppCompatActivity {
 
@@ -49,6 +52,29 @@ public class SettingsActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+
+        SharedPreferences.OnSharedPreferenceChangeListener sharedPreferenceChangeListener = new
+                SharedPreferences.OnSharedPreferenceChangeListener() {
+                    @Override
+                    public void onSharedPreferenceChanged(SharedPreferences sharedPreferences,
+                                                          String key) {
+                        switch (key) {
+                            case "nickname":
+                                Logger.log(getBaseContext(), "nickname", "nickname changed");
+                                sharedPreferences.edit()
+                                        .putBoolean("nickname_changed", true)
+                                        .apply();
+                                break;
+                        }
+                    }
+                };
+
+
+        sharedPreferences.registerOnSharedPreferenceChangeListener(sharedPreferenceChangeListener);
     }
 
 

@@ -25,27 +25,36 @@ public abstract class NetworkTask extends AsyncTask<String, String, String> {
 
     protected Context context;
 
+    protected int successMessage;
+    protected int errorMessage;
+
     public NetworkTask(Context context) {
         this.context = context;
+
+        this.successMessage = R.string.synced_successfully;
+        this.errorMessage = R.string.error_003;
     }
 
     @Nullable
     protected Response request(String endpointUrl, String method, String payload) {
 
-        OutputStream out = null;
+        Log.i("fred sync", "request payload: " + payload);
 
         try {
             URL url = new URL(endpointUrl);
             HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
             urlConnection.setRequestMethod(method);
-            urlConnection.setRequestProperty("Content-Type", "application/json");
-            out = new BufferedOutputStream(urlConnection.getOutputStream());
 
-            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
-            writer.write(payload);
-            writer.flush();
-            writer.close();
-            out.close();
+            if (!"".equals(payload)) {
+                urlConnection.setRequestProperty("Content-Type", "application/json");
+                OutputStream out = null;
+                out = new BufferedOutputStream(urlConnection.getOutputStream());
+                BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(out, "UTF-8"));
+                writer.write(payload);
+                writer.flush();
+                writer.close();
+                out.close();
+            }
 
             urlConnection.connect();
 
@@ -59,13 +68,13 @@ public abstract class NetworkTask extends AsyncTask<String, String, String> {
                 }
             }
             is.close();
-            Logger.log(context, "Fred Sync Response", builder.toString());
+            Logger.log(context, "Sync_Response", builder.toString());
 
             return new Response(urlConnection.getResponseCode(), builder.toString());
 
         } catch (Exception e) {
-            Log.e("Fed Sync", e.getMessage());
-            Logger.e(context, "fred sync", e);
+            //Log.e("Fed Sync", e.getMessage());
+            Logger.e(context, "sync", e);
         }
 
         return null;
@@ -119,7 +128,7 @@ public abstract class NetworkTask extends AsyncTask<String, String, String> {
     }
 
     protected void showToast(final int textResource) {
-        Log.e("fred sync", "showing toast");
+        Log.i("fred sync", "showing toast");
         try {
 
             Handler handler = new Handler(Looper.getMainLooper());
@@ -135,5 +144,7 @@ public abstract class NetworkTask extends AsyncTask<String, String, String> {
             e.printStackTrace();
         }
     }
+
+    protected abstract void onSuccess();
 
 }

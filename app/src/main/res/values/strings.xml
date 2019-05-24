@@ -17,13 +17,16 @@
     <string name="pref_title_display_name">Nickname (freiwillig)</string>
     <string name="pref_default_display_name">John Smith</string>
 
+    <string name="pref_tile_server_url">URL des Tile-Servers (OSM)</string>
+    <string name="pref_default_tile_server_url">https://maps.wikimedia.org/osm-intl</string>
+
     <string name="pref_title_ssids">Zu vermessende Netzwerke</string>
-    <string name="pref_default_ssids">[\"Funkloch\", \"ADELT00\", \"Freifunk\"]</string><!-- todo: for testing, only add relevant ssids here -->
+    <string name="pref_default_ssids">[\"Adelt-IT 5.0 GHZ\", \"Adelt-IT 2.4 GHZ\", \"ADELT00 Gastzugang\", \"Freifunk\"]</string><!-- todo: for testing, only add relevant ssids here -->
 
     <string name="pref_title_upload_url">URL der Gegenstelle</string>
     <string name="pref_default_upload_url">https://fredbackend.ffmsl.de</string>
 
-    <string name="pref_title_upload_only_wifi">Nur über WLAN hochladen</string>
+    <string name="pref_title_upload_only_wifi">Nur über WLAN synchronisieren</string>
 
 
     <!-- Example settings for Data & Sync -->
@@ -122,7 +125,7 @@
     <!-- Example settings for Notifications -->
     <string name="pref_header_notifications">Netzwerkscan</string>
 
-    <string name="auto_upload">Automatisch hochladen</string>
+    <string name="auto_upload">Automatisch synchronisieren</string>
 
     <string name="record_on">Aufzeichnung an</string>
     <string name="record_off">Aufzeichnung aus</string>
@@ -135,8 +138,8 @@
     <string name="sync_settings">Konfiguration der Gegenstelle wird geladen</string>
     <string name="pref_title_download_url">URL der Import-Gegenstelle</string>
     <string name="data_import_button">data_import_button</string>
-    <string name="start_app_string">App starten</string>
-    <string name="start_app_explanation">F.R.E.D benötigt Zugriff auf Ihren Standort. Wurde die App gestartet, ohne die entsprechende Berechtigung, erscheint dieser Bildschirm. Bitte erlauben Sie der App den Zugriff auf Ihren Standort und starten Sie die App über den angezeigten Knopf. Ihre Standortdaten werden ausschließlich anonymisert gespeichert</string>
+    <string name="start_app_string">App initialisieren</string>
+    <string name="start_app_explanation">F.R.E.D benötigt Zugriff auf Ihren Standort. Wurde die App gestartet, ohne die entsprechende Berechtigung, erscheint dieser Bildschirm. Bitte erlauben Sie der App den Zugriff auf Ihren Standort und initialisieren Sie die App über den angezeigten Knopf. Ihre Standortdaten werden ausschließlich anonymisert gespeichert</string>
     <string name="data_upload_button">data_upload_button</string>
     <string name="upload_data">Gesammelte Netzwerkdaten jetzt hochladen</string>
     <string name="last_scan_result">Letzte Netzwerke: </string>
@@ -147,7 +150,7 @@
     <string name="remove_ssid_dialog_title">SSID entfernen?</string>
     <string name="remove">Entfernen</string>
     <string name="gps_disabled">Bitte aktivieren Sie GPS</string>
-    <string name="error_000">Error 000: Nutzerdaten zur Synchronisation konnten nicht erstellt werden</string>
+    <string name="error_000">Error 000: Gegenstellenzugriff zur Synchronisation konnten nicht hergestellt werden</string>
     <string name="scans_synced_successfully">Netzwerke wurden erfolgreich synchronisiert</string>
     <string name="error_001">Error 001: Die Netzwerksynchronisation konnte nicht abgeschlossen werden</string>
     <string name="no_new_scans_to_upload">Es gibt keine weiteren Scans zum hochladen</string>
@@ -176,6 +179,12 @@
     <string name="open_app_to_restart">Der Dienst wurde deaktiviert</string>
     <string name="initializing_scan">Messung wird vorbereitet...</string>
     <string name="starting_synchronization">Messdaten werden zur hinterlegten Gegenstelle hochgeladen</string>
+    <string name="record">Aufzeichnung</string>
+    <string name="error_002">Error: 002: Die Synchronisation konnte nicht abgeschlossen werden. Die Verbindung zur Gegenstelle war erfolgreich, die Antwort enthielt allerdings Fehler</string>
+    <string name="error_003">Error: 003: Allgemeiner Synchronisierungsfehler</string>
+    <string name="synced_successfully">Synchronisierung erfolgreich</string>
+    <string name="logs_synced_successfully">Absturzberichte wurden erfolgreich hochgeladen</string>
+    <string name="empty"></string>
 
 
 </resources>

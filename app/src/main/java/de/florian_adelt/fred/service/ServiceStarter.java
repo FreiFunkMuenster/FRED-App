@@ -31,9 +31,9 @@ public class ServiceStarter {
         if (preferences.getBoolean("service_enabled", true)) {  // aggressive
             if (preferences.getLong("service_stop_at_time", Long.MAX_VALUE) > System.currentTimeMillis()) {
 
-                Log.e("fred service", "start service job");
+                Log.i("fred service", "start service job");
                 //context.startService(new Intent(context, LocationService.class));  // seems to crash
-                ComponentName serviceComponent = new ComponentName(context, BootJob.class);
+                ComponentName serviceComponent = new ComponentName(context, LocationJob.class);
                 JobInfo.Builder builder = new JobInfo.Builder(0, serviceComponent);
 
                 //long wait = Integer.parseInt(preferences.getString("scan_frequency_time", "20")) * 1000;
@@ -46,7 +46,7 @@ public class ServiceStarter {
                 Objects.requireNonNull(jobScheduler).schedule(builder.build());
             }
             else {
-                Log.e("fred service", "Service was shut down by timer (overdue by " + (preferences.getLong("service_stop_at_time", Long.MAX_VALUE) - System.currentTimeMillis()) + ")");
+                Logger.log(context, "service", "Service was shut down by timer (overdue by " + (preferences.getLong("service_stop_at_time", Long.MAX_VALUE) - System.currentTimeMillis()) + ")");
                 preferences.edit().putBoolean("service_enabled", false).apply();
 
                 Intent broadcastIntent = new Intent("de.florian_adelt.fred.stop");
@@ -67,16 +67,16 @@ public class ServiceStarter {
     }
 
     public static void startSynchronizationService(Context context, long wait, boolean wifiOnly, boolean notify) {
-        Log.e("fred service", "check upload service start");
+        Log.i("fred service", "check upload service start");
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
 
         if (preferences.getBoolean("auto_upload", true)) {  // aggressive
-            Log.e("fred service", "start upload service");
+            Log.i("fred service", "start upload service");
             //context.startService(new Intent(context, LocationService.class));  // seems to crash
             ComponentName serviceComponent = new ComponentName(context, SynchronizationService.class);
             JobInfo.Builder builder = new JobInfo.Builder(1, serviceComponent);
-            Log.e("Fred Sync", "Service start after min " + wait);
+            Logger.log(context, "Fred Sync", "Service start after min " + wait);
             //wait = 10000;  // for testing
             builder.setMinimumLatency(wait); // wait at least
             builder.setOverrideDeadline(wait); // maximum delay
@@ -90,8 +90,24 @@ public class ServiceStarter {
             Objects.requireNonNull(jobScheduler).schedule(builder.build());
         }
         else {
-            Logger.log(context, "Fred synchronization service", "auto_upload is set to false, won't start sync service", Logger.LEVEL_INFO);
+            Logger.log(context, "syncService", "auto_upload is set to false, won't start sync service", Logger.LEVEL_INFO);
         }
+    }
+
+
+    public static void startImportService(Context context) {
+        Log.i("fred service", "check upload service start");
+
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
+
+        Log.i("fred service", "start import service");
+        ComponentName serviceComponent = new ComponentName(context, ImportService.class);
+        JobInfo.Builder builder = new JobInfo.Builder(2, serviceComponent);
+        builder.setMinimumLatency(0); // wait at least
+        builder.setOverrideDeadline(1000); // maximum delay
+
+        JobScheduler jobScheduler = context.getSystemService(JobScheduler.class);
+        Objects.requireNonNull(jobScheduler).schedule(builder.build());
     }
 
     public static void setTimeToStop(Context context) {
@@ -108,7 +124,7 @@ public class ServiceStarter {
         else {
             stopAt = System.currentTimeMillis() + value * 1000;
         }
-        Log.e("fred kill timer", "current: " + System.currentTimeMillis() + ", target: " + stopAt);
+        Log.i("fred kill timer", "current: " + System.currentTimeMillis() + ", target: " + stopAt);
         preferences.edit().putLong("service_stop_at_time", stopAt).apply();
     }
 }

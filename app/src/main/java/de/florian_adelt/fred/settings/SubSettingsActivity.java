@@ -140,7 +140,8 @@ public abstract class SubSettingsActivity extends AppCompatActivity {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
                         // todo: add import
-                        Log.e("Fred Import", "Button Press");
+                        Log.i("Fred Import", "Button Press");
+                        ServiceStarter.startImportService(getContext());
                         return true;
                     }
                 });
@@ -150,7 +151,7 @@ public abstract class SubSettingsActivity extends AppCompatActivity {
                 uploadButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        Log.e("Fred Upload", "Button Press");
+                        Log.i("Fred Upload", "Button Press");
                         ServiceStarter.startSynchronizationService(getContext(), 500, false, true);
                         return true;
                     }
@@ -161,7 +162,7 @@ public abstract class SubSettingsActivity extends AppCompatActivity {
                 networksButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        Log.e("Fred target ssid", "Button Press");
+                        Log.i("Fred target ssid", "Button Press");
                        startActivity(new Intent(getActivity(), TargetNetworksActivity.class));
                         return true;
                     }

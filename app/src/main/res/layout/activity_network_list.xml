@@ -52,11 +52,17 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/statistic_last_upload" />
+
+                <TextView
+                    android:id="@+id/backend_user_id"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content" />
             </LinearLayout>
 
             <include
                 android:id="@+id/include"
                 layout="@layout/content_network_list" />
+
         </LinearLayout>
 
     </LinearLayout>

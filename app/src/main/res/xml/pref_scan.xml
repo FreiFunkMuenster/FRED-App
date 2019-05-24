@@ -33,6 +33,18 @@
 
 
 
+    <PreferenceCategory android:title="Karteneinstellungen">
+        <EditTextPreference
+            android:capitalize="words"
+            android:defaultValue="@string/pref_default_tile_server_url"
+            android:inputType="textUri"
+            android:key="tile_server_url"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/pref_tile_server_url" />
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="Akku sparen">
 
         <ListPreference
@@ -44,6 +56,7 @@
             android:positiveButtonText="@null"
             android:title="@string/pref_title_scan_time_to_stop" />
     </PreferenceCategory>
+
 
 
 </PreferenceScreen>

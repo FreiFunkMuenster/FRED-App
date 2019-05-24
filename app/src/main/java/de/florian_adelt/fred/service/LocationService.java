@@ -31,7 +31,7 @@ import de.florian_adelt.fred.wifi.Scanner;
 public class LocationService extends Service {
 
 
-    public static final String TAG = "fred location service";
+    public static final String TAG = "location_service";
 
     private Location location;
     private Scanner wifiScanner;
@@ -45,10 +45,10 @@ public class LocationService extends Service {
         @Override
         public void onLocationChanged(Location newLocation) {
             location = newLocation;
-            Log.e("fred location change", "fred latitude: " + newLocation.getLatitude());
-            Log.e("fred location change", "fred longitude: " + newLocation.getLongitude());
-            Log.e("fred location change", "fred altitude: " + newLocation.getAltitude());
-            Log.e("fred location change", "fred accuracy: " + newLocation.getAccuracy());
+            Logger.log(getApplicationContext(), "location_change", "fred latitude: " + newLocation.getLatitude());
+            Logger.log(getApplicationContext(), "location_change", "fred longitude: " + newLocation.getLongitude());
+            Logger.log(getApplicationContext(), "location_change", "fred altitude: " + newLocation.getAltitude());
+            Logger.log(getApplicationContext(), "location_change", "fred accuracy: " + newLocation.getAccuracy());
 
             wifiScanner.scan(location);
 
@@ -56,19 +56,19 @@ public class LocationService extends Service {
 
         @Override
         public void onStatusChanged(String s, int i, Bundle bundle) {
-            Log.e("fred location change", "fred location status change: " + s);
+            Log.i("fred location change", "fred location status change: " + s);
 
         }
 
         @Override
         public void onProviderEnabled(String s) {
-            Log.e("fred location change", "fred location provider enabled: " + s);
+            Log.i("fred location change", "fred location provider enabled: " + s);
 
         }
 
         @Override
         public void onProviderDisabled(String s) {
-            Log.e("fred location change", "fred location provider disabled: " + s);
+            Logger.log(getApplicationContext(), "location change", "fred location provider disabled: " + s);
             killAndRestart();
         }
     };
@@ -82,17 +82,17 @@ public class LocationService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.e(TAG, "onStartCommand");
+        Logger.log(getApplicationContext(), TAG, "onStartCommand");
         super.onStartCommand(intent, flags, startId);
         this.serviceId = startId;
 
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         if (!preferences.getBoolean("service_enabled", true)) {
-            Log.e(TAG, "Service started but is disabled. Probably was scheduled before disabling. Skip...");
+            Logger.log(getApplicationContext(), TAG, "Service started but is disabled. Probably was scheduled before disabling. Skip...");
             stopSelf(serviceId);
         } else {
             if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                Log.e(TAG, "GPS is disabled");
+                Logger.log(getApplicationContext(), TAG, "GPS is disabled");
 
 
                 Intent notificationIntent = new Intent(getApplicationContext(), MapActivity.class);
@@ -145,7 +145,8 @@ public class LocationService extends Service {
     @Override
     public void onCreate()
     {
-        Log.e(TAG, "onCreate");
+        Log.i(TAG, "onCreate");
+        startForeground(1, new android.app.Notification());  // todo: small hack to use service in background for Android O+
         initializeLocationManager();
         wifiScanner = new Scanner((WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE), this);
 
@@ -154,7 +155,7 @@ public class LocationService extends Service {
             @Override
             public void onReceive(Context context, Intent intent) {
 
-                Log.e("fred stop receiver", "received in service");
+                Log.i("fred stop receiver", "received in service");
                 stopService(new Intent(context, LocationService.class));
                 Notification.cancelAll(context);
                 SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
@@ -167,7 +168,7 @@ public class LocationService extends Service {
         registerReceiver(stopReceiver, new IntentFilter("de.florian_adelt.fred.stop"));
 
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            Logger.log(getApplicationContext(), "fred location service", "GPS Provider is disabled, don't start service");
+            Logger.log(getApplicationContext(), "location_service", "GPS Provider is disabled, don't start service");
             return;
         }
 
@@ -181,11 +182,11 @@ public class LocationService extends Service {
                     0,
                     locationListener);
         } catch (java.lang.SecurityException ex) {
-            Log.e(TAG, "fail to request location update, ignore", ex);
-            Logger.e(getApplicationContext(), "fred location service", ex);
+            //Log.e(TAG, "fail to request location update, ignore", ex);
+            Logger.e(getApplicationContext(), "location_service", ex);
         } catch (IllegalArgumentException ex) {
-            Log.e(TAG, "gps provider does not exist " + ex.getMessage());
-            Logger.e(getApplicationContext(), "fred location service", ex);
+            //Log.e(TAG, "gps provider does not exist " + ex.getMessage());
+            Logger.e(getApplicationContext(), "location_service", ex);
         }
 
     }
@@ -193,13 +194,13 @@ public class LocationService extends Service {
     @Override
     public void onDestroy()
     {
-        Log.e(TAG, "onDestroy");
+        Log.i(TAG, "onDestroy");
         super.onDestroy();
         if (locationManager != null) {
             try {
                 locationManager.removeUpdates(locationListener);
             } catch (Exception ex) {
-                Log.e(TAG, "fail to remove location listeners. This should be ignorable as everything else should keep working afterwards", ex);
+                Logger.log(getApplicationContext(), TAG, "fail to remove location listeners. This should be ignorable as everything else should keep working afterwards, " + ex.getLocalizedMessage());
             }
         }
         wifiScanner.dispose();
@@ -211,7 +212,7 @@ public class LocationService extends Service {
     }
 
     private void initializeLocationManager() {
-        Log.e(TAG, "initializeLocationManager");
+        Log.i(TAG, "initializeLocationManager");
         if (locationManager == null) {
             locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
         }

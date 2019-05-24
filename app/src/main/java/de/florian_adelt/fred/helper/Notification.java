@@ -1,9 +1,11 @@
 package de.florian_adelt.fred.helper;
 
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
 import android.service.notification.StatusBarNotification;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
@@ -19,24 +21,30 @@ public class Notification {
     public static int NO_WIFI_ID    = 3;
     public static int AUTO_DISABLED = 4;
 
+    private static String CHANNEL_ID = "fred_background";
+    private static String CHANNEL_NAME = "Statusupdates";
 
-    public static void cancel(NotificationManager notificationManager, int id) {
 
-        Log.e("Fred notification", "trying removing notification: " + id);
+    public static boolean cancel(NotificationManager notificationManager, int id) {
+
         if (notificationManager != null)
-            if (isActive(notificationManager, id))
-                notificationManager.cancel(id);
-            else
-                Log.e("Fred notification", "notification was not active");
+            if (isActive(notificationManager, id)) {
+                notificationManager.cancel(CHANNEL_ID, id);
+                return true;
+            }
+        return false;
     }
     public static void cancel(Context context, int id) {
+        Logger.log(context, "notification", "trying removing notification: " + id);
+        if (!cancel((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE), id)) {
+            Logger.log(context, "notification", "notification was not active or notification manager null: " + id);
+        }
 
-        cancel((NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE), id);
     }
 
     public static void createServiceNotification(Context context, NotificationManager notificationManager, int id, String title, String smallText, @Nullable String longText, int icon) {
 
-        Log.e("Fred notification", "notification change to: " + title);
+        Logger.log(context, "notification", "notification change to: " + title);
 
         /* Only show one of the two notifications, and don't renew it if it already exists */
         if (notificationManager != null) {
@@ -46,16 +54,16 @@ public class Notification {
             boolean isGpsActive = isActive(notificationManager, ACTIVE_ID);
 
             if (id == NO_GPS_ID) {
-                notificationManager.cancel(Notification.ACTIVE_ID);
+                cancel(notificationManager, ACTIVE_ID);
                 if (isNoGpsActive) {
-                    Log.e("Fred notification", "Already active");
+                    Logger.log(context, "notification", "already active");
                     return;
                 }
             }
             else if (id == ACTIVE_ID) {
-                notificationManager.cancel(Notification.NO_GPS_ID);
+                cancel(notificationManager, NO_GPS_ID);
                 if (isGpsActive) {
-                    Log.e("Fred notification", "Already active");
+                    Logger.log(context, "notification", "already active");
                     return;
                 }
             }
@@ -65,7 +73,7 @@ public class Notification {
             PendingIntent stopServiceIntent =
                     PendingIntent.getBroadcast(context, 0, broadcastIntent, 0);
 
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "1")
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                     .setSmallIcon(icon)
                     .setContentTitle(title)
                     .setContentText(smallText)
@@ -85,14 +93,15 @@ public class Notification {
             }*/
 
 
-            notificationManager.notify(id, builder.build());
+            //notificationManager.notify(id, builder.build());
+            show(notificationManager, builder, id);
 
         }
 
     }
 
     public static void enableWifiNotification(Context context) {
-        Log.e("Fred notification", "tried to add wifi notification");
+        Logger.log(context, "notification", "trying to add wifi notification");
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (notificationManager != null) {
@@ -100,7 +109,7 @@ public class Notification {
             cancel(notificationManager, Notification.ACTIVE_ID);
 
             if (!isActive(notificationManager, NO_WIFI_ID)) {
-                Log.e("Fred notification", "adding wifi disabled notification");
+                Logger.log(context, "notification", "adding wifi disabled notification");
 
 
                 Intent broadcastIntent = new Intent("de.florian_adelt.fred.stop");
@@ -108,7 +117,7 @@ public class Notification {
                 PendingIntent stopServiceIntent =
                         PendingIntent.getBroadcast(context, 0, broadcastIntent, 0);
 
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "1")
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                         .setSmallIcon(R.drawable.ic_no_wifi)
                         .setContentTitle(context.getString(R.string.app_is_inactive_no_wifi))
                         .setContentText(context.getString(R.string.please_enable_wifi))
@@ -118,7 +127,8 @@ public class Notification {
                         ;
 
 
-                notificationManager.notify(NO_WIFI_ID, builder.build());
+                //notificationManager.notify(NO_WIFI_ID, builder.build());
+                show(notificationManager, builder, NO_WIFI_ID);
 
 
             }
@@ -128,28 +138,51 @@ public class Notification {
 
     }
     public static void autoDisabledNotification(Context context) {
-        Log.e("Fred notification", "try to add auto-diabled notification");
+        Logger.log(context, "notification", "try to add auto-disabled notification");
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (notificationManager != null) {
 
             if (!isActive(notificationManager, AUTO_DISABLED)) {
-                Log.e("Fred notification", "adding auto disabled notification");
+                Logger.log(context, "notification", "adding auto disabled notification");
 
-                NotificationCompat.Builder builder = new NotificationCompat.Builder(context, "1")
+                cancelAll(context);
+
+                NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CHANNEL_ID)
                         .setSmallIcon(R.drawable.ic_no_gps)
                         .setContentTitle(context.getString(R.string.app_auto_disabled))
                         .setContentText(context.getString(R.string.open_app_to_restart))
                         .setPriority(NotificationCompat.PRIORITY_MIN)
-                        .setOngoing(true);
+                        .setOngoing(false);
 
-                notificationManager.notify(AUTO_DISABLED, builder.build());
+                //notificationManager.notify(AUTO_DISABLED, builder.build());
+                show(notificationManager, builder, AUTO_DISABLED);
 
             }
 
 
         }
 
+    }
+
+
+    private static void show(NotificationManager manager, NotificationCompat.Builder builder, int id) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // I would suggest that you use IMPORTANCE_DEFAULT instead of IMPORTANCE_HIGH
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, CHANNEL_NAME, NotificationManager.IMPORTANCE_MIN);
+            channel.enableVibration(false);
+            channel.enableLights(false);
+            //channel.canShowBadge();
+            channel.setDescription("Statusupdates für FRED");
+            // Did you mean to set the property to enable Show Badge?
+            channel.setShowBadge(true);
+            manager.createNotificationChannel(channel);
+            builder.setChannelId(CHANNEL_ID);
+
+            manager.notify(CHANNEL_ID, id, builder.build());
+        } else {
+            manager.notify(id, builder.build());
+        }
     }
 
     public static boolean isActive(NotificationManager notificationManager, int id) {

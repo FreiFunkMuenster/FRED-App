@@ -28,7 +28,7 @@ import de.florian_adelt.fred.database.DatabaseHelper;
 import de.florian_adelt.fred.helper.Logger;
 import de.florian_adelt.fred.helper.Status;
 
-public class SynchronizationTask extends NetworkTask {
+public abstract class SynchronizationTask extends NetworkTask {
 
 
     protected SharedPreferences preferences;
@@ -64,7 +64,7 @@ public class SynchronizationTask extends NetworkTask {
                     "{\"device-make\":\"" + Build.MANUFACTURER + "\", \"device-model\": \"" + Build.MODEL + "\"}");
 
             if (response == null) {
-                Logger.log(context, "fred sync", "create user returned null");
+                Logger.log(context, "sync", "create user returned null");
                 showToast(R.string.error_000);
                 de.florian_adelt.fred.helper.Status.broadcastStatus(context, R.string.error_000);
                 return "";
@@ -73,6 +73,13 @@ public class SynchronizationTask extends NetworkTask {
             Type type = new TypeToken<CreateUserResponse>() {}.getType();
             Gson gson = new Gson();
             CreateUserResponse createUserResponse = gson.fromJson(response.getData(), type);
+
+            if ("".equals(createUserResponse.getHash())) {
+                Logger.log(context, "sync", "create user returned empty hash value");
+                showToast(R.string.error_002);
+                de.florian_adelt.fred.helper.Status.broadcastStatus(context, R.string.error_002);
+                return "";
+            }
 
             preferences.edit()
                     .putString("user_hash", createUserResponse.getHash())
@@ -84,17 +91,43 @@ public class SynchronizationTask extends NetworkTask {
 
         }
 
+        if (preferences.getBoolean("nickname_changed", true)) {
+
+            try {
+                Response response = request(
+                        baseUrl + "app-user/update?api_key=" + apiKey + "&hash=" + userHash,
+                        "POST",
+                        "{\"nickname\":\"" + preferences.getString("nickname", "Anonym") + "\"}");
+
+                if (response == null) {
+                    Logger.log(context, "sync", "tried to update user nickname, but no response was given");
+                } else if (response.getCode() == 200) {
+                    Logger.log(context, "sync", "updated nickname successfully");
+                    preferences.edit()
+                            .putBoolean("nickname_changed", false)
+                            .apply();
+                }
+            } catch (Exception e) {
+                Logger.e(context, "sync_name", e);
+            }
+
+        }
+
         Response response = request(baseUrl + actionUrl + "?api_key=" + apiKey + "&hash=" + userHash, "POST", data);
 
         //System.out.println(response.toString());
-        if (response != null && response.getCode() >= 200 && response.getCode() < 300) {
-            dbHelper.setSynced();
-            showToast(R.string.scans_synced_successfully);
-            de.florian_adelt.fred.helper.Status.broadcastStatus(context, R.string.scans_synced_successfully);
+        if (data.length() > 20 && response != null && response.getCode() >= 200 && response.getCode() < 300) {
+            if (!"".equals(context.getString(successMessage))) {
+                showToast(successMessage);
+                de.florian_adelt.fred.helper.Status.broadcastStatus(context, successMessage);
+            }
+            onSuccess();
         }
         else {
-            showToast(R.string.error_001);
-            de.florian_adelt.fred.helper.Status.broadcastStatus(context, R.string.error_001);
+            if (!"".equals(context.getString(errorMessage))) {
+                showToast(errorMessage);
+                de.florian_adelt.fred.helper.Status.broadcastStatus(context, errorMessage);
+            }
         }
 
         return "";
@@ -102,8 +135,9 @@ public class SynchronizationTask extends NetworkTask {
 
     @Override
     protected void showToast(int textResource) {
-        Log.e("Fred sync", "show toast: " + notify);
+        Logger.log(context, "sync", "show toast: " + notify);
         if (notify)
             super.showToast(textResource);
     }
 }
+

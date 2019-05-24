@@ -1,8 +1,10 @@
 package de.florian_adelt.fred.helper;
 
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.NavUtils;
@@ -131,7 +133,7 @@ public class NetworkListActivity extends AppCompatActivity {
                 }
             } catch (Exception e) {
                 e.printStackTrace();
-                Logger.e(getApplicationContext(), "Fred network list", e);
+                Logger.e(getApplicationContext(), "network_list", e);
             }
 
         }
@@ -141,6 +143,11 @@ public class NetworkListActivity extends AppCompatActivity {
 
         ((TextView)findViewById(R.id.statistic_unsynced_scans)).setText(getString(R.string.statistic_unsynced_scans, cursor.getCount()));
 
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        String userId = preferences.getString("user_id", "");
+        if (!"".equals(userId)) {
+            ((TextView)findViewById(R.id.backend_user_id)).setText("ID: " + userId);
+        }
 
         cursor.close();
 

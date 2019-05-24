@@ -23,6 +23,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import de.florian_adelt.fred.helper.LogEntry;
 import de.florian_adelt.fred.helper.Logger;
 import de.florian_adelt.fred.wifi.ScanResult;
 import de.florian_adelt.fred.wifi.Wifi;
@@ -31,9 +32,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
     private static final String DATABASE_NAME = "fred.db";
     private static final int DATABASE_VERSION = 1;
+    private Context context;
 
     public DatabaseHelper(@Nullable Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
+        this.context = context;
     }
 
     @Override
@@ -57,6 +60,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                     BaseColumns._ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "time INTEGER NOT NULL DEFAULT 0, " +
                     "level INTEGER NOT NULL DEFAULT 0, " +
+                    "tag TEXT NOT NULL DEFAULT ''," +
                     "message TEXT NOT NULL DEFAULT ''," +
                     "synced_at INTEGER DEFAULT NULL" +
                 ")";
@@ -139,6 +143,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
             } catch (Exception e) {
                 e.printStackTrace();
+                Logger.e(context, "DatabaseHelper", e);
             }
 
             ScanResult scanResult = new ScanResult(
@@ -192,6 +197,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
             } catch (Exception e) {
                 e.printStackTrace();
+                Logger.e(context, "DatabaseHelper", e);
             }
 
             result = new ScanResult(
@@ -225,7 +231,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 
 
-    public void log(String msg, int level) {
+    public void log(String msg, int level, String tag) {
         SQLiteDatabase db = getWritableDatabase();
 
         try {
@@ -235,20 +241,73 @@ public class DatabaseHelper extends SQLiteOpenHelper {
             values.put("time", time);
             values.put("level", level);
             values.put("message", msg);
+            values.put("tag", tag);
 
             long id = db.insert("Logs", null, values);
 
         }
         catch (Exception e) {
             e.printStackTrace();
+            //Exceptions when logging should not create logs to avoid loopholes
         }
         finally {
             db.close();
         }
     }
 
-    public void log(String msg) {
-        log(msg, Logger.LEVEL_INFO);
+    public void log(String msg, String tag) {
+        log(msg, Logger.LEVEL_INFO, tag);
+    }
+
+    public List<LogEntry> getUnsyncedLogs() {
+
+        SQLiteDatabase db = getReadableDatabase();
+        String[] columns = {"*"};
+        Cursor cursor = db.query(
+                false,
+                "Logs",
+                columns,
+                "synced_at IS NULL",
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+        List<LogEntry> result = new ArrayList<>(cursor.getCount());
+
+        while (cursor.moveToNext()) {
+
+            LogEntry logEntry = new LogEntry(
+                    cursor.getInt(cursor.getColumnIndex("_id")),
+                    cursor.getInt(cursor.getColumnIndex("level")),
+                    cursor.getString(cursor.getColumnIndex("tag")),
+                    cursor.getString(cursor.getColumnIndex("message")),
+                    cursor.getLong(cursor.getColumnIndex("time"))
+                    );
+
+            result.add(logEntry);
+
+        }
+
+
+        cursor.close();
+        db.close();
+
+        return result;
+    }
+
+
+
+    public void setLogsSynced() {
+        SQLiteDatabase db = getWritableDatabase();
+
+        ContentValues cv = new ContentValues();
+        cv.put("synced_at", System.currentTimeMillis());
+
+        db.update("Logs", cv, "synced_at IS NULL", null);
+
+        db.close();
     }
 
 }

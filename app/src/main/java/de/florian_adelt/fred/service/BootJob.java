@@ -11,9 +11,12 @@ public class BootJob extends JobService {  // todo: rename class
 
     @Override
     public boolean onStartJob(JobParameters params) {
-        Log.e(TAG, "try to start service");
-        Intent service = new Intent(getApplicationContext(), LocationService.class);
-        getApplicationContext().startService(service);
+        Log.i(TAG, "try to start service");
+        //Intent service = new Intent(getApplicationContext(), LocationService.class);
+        //getApplicationContext().startService(service);
+
+        ServiceStarter.startLocationService(getApplicationContext());
+        ServiceStarter.startSynchronizationService(getApplicationContext());
 
         //ServiceStarter.startLocationService(getApplicationContext());
 

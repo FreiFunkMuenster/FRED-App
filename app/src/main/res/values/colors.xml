@@ -6,5 +6,6 @@
     <color name="mapOverlayBackground">#aaffffff</color>
     <color name="text">#ff000000</color>
     <color name="gray">#ff424242</color>
+    <color name="lightBlue">#ff009688</color>
 
 </resources>
