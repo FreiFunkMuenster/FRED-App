@@ -30,6 +30,7 @@ public class Notification {
         if (notificationManager != null)
             if (isActive(notificationManager, id)) {
                 notificationManager.cancel(CHANNEL_ID, id);
+                notificationManager.cancel(id);
                 return true;
             }
         return false;
