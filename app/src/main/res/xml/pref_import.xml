@@ -18,7 +18,7 @@
         android:singleLine="true"
         android:title="@string/pref_title_download_url" />
 
-        <Preference android:title="@string/sync_now"
+        <Preference android:title="@string/download_configuration_now"
             android:key="@string/data_import_button"
             android:summary="@string/sync_settings"/>
 
