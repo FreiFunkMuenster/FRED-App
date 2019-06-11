@@ -58,7 +58,7 @@ public abstract class NetworkTask extends AsyncTask<String, String, String> {
 
             urlConnection.connect();
 
-            InputStream is = urlConnection.getInputStream();
+            InputStream is = urlConnection.getResponseCode() < 300 ? urlConnection.getInputStream() : urlConnection.getErrorStream();
             StringBuilder builder = new StringBuilder();
             try (InputStreamReader isr = new InputStreamReader(is)) {
                 char[] buffer = new char[1024];
