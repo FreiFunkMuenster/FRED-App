@@ -21,7 +21,7 @@
     <string name="pref_default_tile_server_url">https://maps.wikimedia.org/osm-intl</string>
 
     <string name="pref_title_ssids">Zu vermessende Netzwerke</string>
-    <string name="pref_default_ssids">[\"Adelt-IT 5.0 GHZ\", \"Adelt-IT 2.4 GHZ\", \"ADELT00 Gastzugang\", \"Freifunk\"]</string><!-- todo: for testing, only add relevant ssids here -->
+    <string name="pref_default_ssids">[\"Freifunk\"]</string>
 
     <string name="pref_title_upload_url">URL der Gegenstelle</string>
     <string name="pref_default_upload_url">https://fredbackend.ffmsl.de</string>

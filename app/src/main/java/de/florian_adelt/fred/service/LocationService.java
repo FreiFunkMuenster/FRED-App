@@ -146,7 +146,7 @@ public class LocationService extends Service {
     public void onCreate()
     {
         Log.i(TAG, "onCreate");
-        startForeground(1, new android.app.Notification());  // todo: small hack to use service in background for Android O+
+        startForeground(1, new android.app.Notification());  // small hack to use service in background for Android O+
         initializeLocationManager();
         wifiScanner = new Scanner((WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE), this);
 

@@ -139,7 +139,6 @@ public abstract class SubSettingsActivity extends AppCompatActivity {
                 importButton.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        // todo: add import
                         Log.i("Fred Import", "Button Press");
                         ServiceStarter.startImportService(getContext());
                         return true;
